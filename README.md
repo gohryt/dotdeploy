@@ -1,5 +1,5 @@
-#### To run
-place ```.deploy``` file to your working folder or pass deploy-file name as argument:
+## To run
+place ```.deploy``` file to your working folder or pass deploy-file name as argument. Deploy file should looks like below and filled with commands from Commands section:
 ```
 {
   "folder": "update",
@@ -13,3 +13,12 @@ place ```.deploy``` file to your working folder or pass deploy-file name as argu
   }]
 }
 ```
+## Commands
+#### Copy
+```
+{
+    "type": "copy",
+    "file": ".service"
+  }
+```
+copy file with name to working folder.
