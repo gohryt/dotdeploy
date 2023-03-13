@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"log"
 	"os"
+	"path"
 
 	"github.com/goccy/go-json"
 )
@@ -11,7 +13,7 @@ type (
 	Deploy struct {
 		Folder string
 
-		Do []Action
+		ActionList []Action `json:"Do"`
 	}
 
 	Action struct {
@@ -19,11 +21,11 @@ type (
 	}
 
 	Type struct {
-		Type string
+		Type string `json:"type"`
 	}
 
 	Copy struct {
-		File string
+		File string `json:"file"`
 	}
 )
 
@@ -77,29 +79,44 @@ func main() {
 	}
 
 	defer func() {
-		err := os.Remove(deploy.Folder)
+		err := os.RemoveAll(deploy.Folder)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}()
 
-	for i := range deploy.Do {
-		err = deploy.do(i)
+	for i := range deploy.ActionList {
+		err = deploy.Do(i)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 }
 
-func (deploy *Deploy) do(action int) error {
-	data := deploy.Do[action].Data
+func (deploy *Deploy) Do(action int) error {
+	data := deploy.ActionList[action].Data
 
 	switch data.(type) {
 	case *Copy:
-		log.Println(data)
+		return deploy.Copy(data.(*Copy))
 	default:
 		log.Println("undefiden action:", data)
 	}
 
 	return nil
+}
+
+func (deploy *Deploy) Copy(copy *Copy) error {
+	source, err := os.Open(copy.File)
+	if err != nil {
+		return err
+	}
+
+	target, err := os.Create(path.Join(deploy.Folder, source.Name()))
+	if err != nil {
+		return err
+	}
+
+	_, err = bufio.NewWriter(target).ReadFrom(source)
+	return err
 }
