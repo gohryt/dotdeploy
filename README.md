@@ -1,5 +1,5 @@
-#### Readme
-To run place ```.deploy``` file to your working folder or pass deploy-file name as argument:
+#### To run
+place ```.deploy``` file to your working folder or pass deploy-file name as argument:
 ```
 {
   "folder": "update",
