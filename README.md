@@ -1,5 +1,5 @@
 ## To run
-Place ```.deploy``` file to your working folder or pass deploy-file name as argument. Deploy file should looks like below and filled with commands from Commands section:
+Place ```.deploy``` file To your working folder or pass deploy-file name as argument. Deploy file should looks like below and filled with commands from Commands section:
 ```
 {
   "folder": "update",
@@ -31,23 +31,33 @@ Place ```.deploy``` file to your working folder or pass deploy-file name as argu
   "Do": [{
     "type": "copy",
 
-    "from": ".deploy",
-    "to": "update/.deploy"
+    "From": {
+      "path": ".deploy"
+    },
+    "To": {
+      "path": "update/.deploy"
+    }
   }, {
     "type": "move",
     "parallel": true,
 
-    "from": "update/.deploy",
-    "to": "update/.deploy.example"
+    "From": {
+      "path": "update/.deploy"
+    },
+    "To": {
+      "path": "update/.deploy.example"
+    }
   }, {
     "type": "run",
     "parallel": true,
 
-    "path": "echo",
     "timeout": 4,
 
+    "Path": {
+      "path": "echo"
+    },
     "Environment": ["HELLO='FROM DEPLOY'"],
-    "Query": ["hello", "from", ".deploy"]
+    "Query": ["hello", "From", ".deploy"]
   }]
 }
 ```
@@ -98,31 +108,41 @@ Each element may be ```parallel``` which means that it will be started in gorout
 {
   "type": "copy",
 
-  "from": ".service",
-  "to": "update/.service"
+  "From": {
+    "path": ".service"
+  },
+  "To": {
+    "path": "update/.service"
+  }
 }
 ```
-Copy ```from``` ```to```. ```to``` key may be ignored. In this case programm will copy file to workrirectory ```folder```.
+Copy ```From``` ```To```. ```To``` key may be ignored. In this case programm will copy file to workrirecTory ```folder```.
 #### Move
 ```
 {
   "type": "move",
 
-  "from": ".service",
-  "to": "update/.service"
+  "From": {
+    "path": ".service"
+  },
+  "To": {
+    "path": "update/.service"
+  }
 }
 ```
-Move ```from``` ```to```. ```to``` key may be ignored. In this case programm will copy file to workrirectory ```folder```.
+Move ```From``` ```To```. ```To``` key may be ignored. In this case programm will copy file to workrirecTory ```folder```.
 #### Run
 ```
 {
   "type": "run",
 
-  "path": "echo",
   "timeout": 4,
   
+  "Path": {
+    "path": "echo"
+  },
   "Environment": ["HELLO='FROM DEPLOY'"],
-  "Query": ["hello", "$HELLO", ".deploy"]
+  "Query": ["hello", "from", ".deploy"]
 }
 ```
-Run some ```path``` with or without timeout. You can also set Environment and Query.
+Run some ```Path``` with or without timeout. You can also set Environment and Query.

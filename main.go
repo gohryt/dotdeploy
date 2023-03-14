@@ -21,6 +21,11 @@ type (
 		Check() error
 		String() string
 	}
+
+	Path struct {
+		Connection string `json:"connection"`
+		Path       string `json:"path"`
+	}
 )
 
 func main() {

@@ -27,19 +27,19 @@ type (
 	}
 
 	Copy struct {
-		From string `json:"from"`
-		To   string `json:"to"`
+		From Path `json:"From"`
+		To   Path `json:"To"`
 	}
 
 	Move struct {
-		From string `json:"from"`
-		To   string `json:"to"`
+		From Path `json:"From"`
+		To   Path `json:"To"`
 	}
 
 	Run struct {
-		Path    string `json:"path"`
-		Timeout int    `json:"timeout"`
+		Timeout int `json:"timeout"`
 
+		Path        Path     `json:"Path"`
 		Environment []string `json:"Environment"`
 		Query       []string `json:"Query"`
 	}
@@ -74,7 +74,7 @@ func (action *Action) UnmarshalJSON(source []byte) error {
 }
 
 func (copy *Copy) Check() error {
-	if copy.From == "" {
+	if copy.From.Path == "" {
 		return errors.New("'from' can't be empty")
 	}
 
@@ -86,7 +86,7 @@ func (copy *Copy) String() string {
 }
 
 func (move *Move) Check() error {
-	if move.From == "" {
+	if move.From.Path == "" {
 		return errors.New("'from' can't be empty")
 	}
 
@@ -98,7 +98,7 @@ func (move *Move) String() string {
 }
 
 func (run *Run) Check() error {
-	if run.Path == "" {
+	if run.Path.Path == "" {
 		return errors.New("'path' can't be empty")
 	}
 
@@ -135,17 +135,17 @@ func (deploy *Deploy) Process(action *Action) error {
 }
 
 func (deploy *Deploy) Copy(copy *Copy) error {
-	source, err := os.Open(copy.From)
+	source, err := os.Open(copy.From.Path)
 	if err != nil {
 		return err
 	}
 	defer source.Close()
 
-	if copy.To == "" {
-		copy.To = filepath.Join(deploy.Folder, source.Name())
+	if copy.To.Path == "" {
+		copy.To.Path = filepath.Join(deploy.Folder, source.Name())
 	}
 
-	target, err := os.Create(copy.To)
+	target, err := os.Create(copy.To.Path)
 	if err != nil {
 		return err
 	}
@@ -156,34 +156,34 @@ func (deploy *Deploy) Copy(copy *Copy) error {
 }
 
 func (deploy *Deploy) Move(move *Move) error {
-	source, err := os.Open(move.From)
+	source, err := os.Open(move.From.Path)
 	if err != nil {
 		return err
 	}
 	defer source.Close()
 
-	if move.To == "" {
-		move.To = filepath.Join(deploy.Folder, source.Name())
+	if move.To.Path == "" {
+		move.To.Path = filepath.Join(deploy.Folder, source.Name())
 	}
 
-	return os.Rename(move.From, move.To)
+	return os.Rename(move.From.Path, move.To.Path)
 }
 
 func (deploy *Deploy) Run(run *Run) error {
-	if filepath.Base(run.Path) == run.Path {
-		path, err := exec.LookPath(run.Path)
+	if filepath.Base(run.Path.Path) == run.Path.Path {
+		path, err := exec.LookPath(run.Path.Path)
 		if err != nil {
 			return err
 		}
 
-		run.Path = path
+		run.Path.Path = path
 	} else {
 		wd, err := os.Getwd()
 		if err != nil {
 			return err
 		}
 
-		run.Path = filepath.Join(wd, run.Path)
+		run.Path.Path = filepath.Join(wd, run.Path.Path)
 	}
 
 	stdout := &bytes.Buffer{}
@@ -195,9 +195,9 @@ func (deploy *Deploy) Run(run *Run) error {
 		ctx, cancel := context.WithTimeout(context.Background(), (time.Duration(run.Timeout) * time.Second))
 		defer cancel()
 
-		command = exec.CommandContext(ctx, run.Path, run.Query...)
+		command = exec.CommandContext(ctx, run.Path.Path, run.Query...)
 	} else {
-		command = exec.Command(run.Path, run.Query...)
+		command = exec.Command(run.Path.Path, run.Query...)
 	}
 
 	command.Env = append(os.Environ(), run.Environment...)
