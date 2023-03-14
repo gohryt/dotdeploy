@@ -3,26 +3,28 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"errors"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sync"
+	"time"
 
 	"github.com/goccy/go-json"
 )
 
 type (
 	Deploy struct {
-		Folder string
+		Folder string `json:"folder"`
+		Remove bool   `json:"remove"`
 
-		ActionList []Action `json:"Do"`
+		Do []Action `json:"Do"`
 	}
 
 	Action struct {
 		Data     Checkable
-		Parallel bool
+		Parallel bool `json:"parallel"`
 	}
 
 	Checkable interface {
@@ -40,10 +42,11 @@ type (
 	}
 
 	Run struct {
-		Path string `json:"path"`
+		Path    string `json:"path"`
+		Timeout int    `json:"timeout"`
 
-		Environment  []string `json:"Environment"`
-		ArgumentList []string `json:"ArgumentList"`
+		Environment []string `json:"Environment"`
+		Query       []string `json:"Query"`
 	}
 
 	Empty string
@@ -102,22 +105,33 @@ func main() {
 		log.Fatal(err)
 	}
 
-	defer func() {
-		err := os.RemoveAll(deploy.Folder)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}()
+	if deploy.Remove {
+		defer func() {
+			err := os.RemoveAll(deploy.Folder)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}()
+	}
 
-	group := new(sync.WaitGroup)
+	receiver := make(chan error)
 
-	for i := range deploy.ActionList {
-		action := deploy.ActionList[i]
+	in := int64(0)
+	done := int64(0)
+
+	for i := range deploy.Do {
+		action := deploy.Do[i]
 
 		if action.Parallel == false {
-			group.Wait()
+			for ; done < in; done += 1 {
+				err = errors.Join(err, <-receiver)
+			}
 
-			err = deploy.Do(action)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			err = deploy.Process(action)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -125,22 +139,23 @@ func main() {
 			continue
 		}
 
-		group.Add(1)
+		in += 1
 
 		go func() {
-			err := deploy.Do(action)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			group.Add(-1)
+			receiver <- deploy.Process(action)
 		}()
 	}
 
-	group.Wait()
+	for ; done < in; done += 1 {
+		err = errors.Join(err, <-receiver)
+	}
+
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
-func (deploy *Deploy) Do(action Action) error {
+func (deploy *Deploy) Process(action Action) error {
 	data := action.Data
 
 	switch data.(type) {
@@ -182,32 +197,45 @@ func (deploy *Deploy) Run(run *Run) error {
 		}
 
 		run.Path = path
+	} else {
+		wd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+
+		run.Path = filepath.Join(wd, run.Path)
 	}
 
 	stdout := &bytes.Buffer{}
 	stderr := &bytes.Buffer{}
 
-	command := &exec.Cmd{
-		Path: run.Path,
-		Env:  append(os.Environ(), run.Environment...),
-		Args: append([]string{run.Path}, run.ArgumentList...),
+	command := (*exec.Cmd)(nil)
 
-		Stdout: stdout,
-		Stderr: stderr,
+	if run.Timeout > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), (time.Duration(run.Timeout) * time.Second))
+		defer cancel()
+
+		command = exec.CommandContext(ctx, run.Path, run.Query...)
+	} else {
+		command = exec.Command(run.Path, run.Query...)
 	}
 
-	err := command.Run()
+	command.Env = append(os.Environ(), run.Environment...)
+
+	command.Stdout = stdout
+	command.Stderr = stderr
+
+	err := command.Start()
 	if err != nil {
 		return err
 	}
 
-	_, err = os.Stdout.ReadFrom(stdout)
-	if err != nil {
-		return err
-	}
+	err = command.Wait()
 
-	_, err = os.Stderr.ReadFrom(stderr)
-	return err
+	_, one := os.Stdout.ReadFrom(stdout)
+	_, two := os.Stderr.ReadFrom(stderr)
+
+	return errors.Join(err, one, two)
 }
 
 func (copy *Copy) Check() error {
