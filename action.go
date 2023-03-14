@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/goccy/go-json"
@@ -145,6 +146,15 @@ func (deploy *Deploy) Copy(copy *Copy) error {
 		copy.To.Path = filepath.Join(deploy.Folder, source.Name())
 	}
 
+	folder := strings.LastIndex(copy.To.Path, "/")
+
+	if folder > 0 {
+		err = os.MkdirAll(copy.To.Path[:folder], os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+
 	target, err := os.Create(copy.To.Path)
 	if err != nil {
 		return err
@@ -161,6 +171,15 @@ func (deploy *Deploy) Move(move *Move) error {
 		return err
 	}
 	defer source.Close()
+
+	folder := strings.LastIndex(move.To.Path, "/")
+
+	if folder > 0 {
+		err = os.MkdirAll(move.To.Path[:folder], os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
 
 	if move.To.Path == "" {
 		move.To.Path = filepath.Join(deploy.Folder, source.Name())

@@ -21,27 +21,27 @@ type (
 	}
 
 	Key struct {
-		Name string
+		Name string `json:"name"`
 
-		Host     string
-		File     string
-		Username string
-		Password string
+		Host     string `json:"host"`
+		File     string `json:"file"`
+		Username string `json:"username"`
+		Password string `json:"password"`
 	}
 
 	Password struct {
-		Name string
+		Name string `json:"name"`
 
-		Host     string
-		Username string
-		Password string
+		Host     string `json:"host"`
+		Username string `json:"username"`
+		Password string `json:"password"`
 	}
 
 	Agent struct {
-		Name string
+		Name string `json:"name"`
 
-		Host     string
-		Username string
+		Host     string `json:"host"`
+		Username string `json:"username"`
 	}
 )
 
