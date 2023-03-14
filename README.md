@@ -14,8 +14,13 @@ Place ```.deploy``` file to your working folder or pass deploy-file name as argu
   }, {
     "type": "run",
     "path": "go",
-    "environments": ["CGO_ENABLED=0"],
-    "arguments": ["build", "-o", "update/main"]
+
+    "Environments": [
+      "CGO_ENABLED=0"
+    ],
+    "Arguments": [
+      "build", "-o", "update/main"
+    ]
   }]
 }
 ```

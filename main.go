@@ -33,9 +33,10 @@ type (
 	}
 
 	Run struct {
-		Path            string   `json:"path"`
-		EnvironmentList []string `json:"environments"`
-		ArgumentList    []string `json:"arguments"`
+		Path string `json:"path"`
+
+		EnvironmentList []string `json:"Environments"`
+		ArgumentList    []string `json:"Arguments"`
 	}
 )
 
