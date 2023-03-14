@@ -3,7 +3,7 @@ Place ```.deploy``` file to your working folder or pass deploy-file name as argu
 ```
 {
   "folder": "update",
-  "remove": true,
+  "keep": true,
 
   "Do": [{
     "type": "copy",
@@ -23,7 +23,7 @@ Place ```.deploy``` file to your working folder or pass deploy-file name as argu
   }]
 }
 ```
-```folder``` is folder wich will be created on start, it also may be deleted at processing end with setting ```remove``` to true.
+```folder``` is folder wich will be created on start, it will be deleted at processing end while setting ```keep``` is false.
 ## Commands
 #### Parallel
 ```
@@ -41,7 +41,17 @@ Each command may be ```parallel``` which means that it will be started in gorout
   "to": "update/.service"
 }
 ```
-Copy file with name to working folder. ```to``` key may be ignored. In this case programm will copy file to workrirectory ```folder```.
+Copy ```from``` ```to```. ```to``` key may be ignored. In this case programm will copy file to workrirectory ```folder```.
+#### Move
+```
+{
+  "type": "move",
+
+  "from": ".service",
+  "to": "update/.service"
+}
+```
+Move ```from``` ```to```. ```to``` key may be ignored. In this case programm will copy file to workrirectory ```folder```.
 #### Run
 ```
 {

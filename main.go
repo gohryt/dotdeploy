@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -17,7 +18,7 @@ import (
 type (
 	Deploy struct {
 		Folder string `json:"folder"`
-		Remove bool   `json:"remove"`
+		Keep   bool   `json:"keep"`
 
 		Do []Action `json:"Do"`
 	}
@@ -29,6 +30,7 @@ type (
 
 	Checkable interface {
 		Check() error
+		String() string
 	}
 
 	Type struct {
@@ -37,6 +39,11 @@ type (
 	}
 
 	Copy struct {
+		From string `json:"from"`
+		To   string `json:"to"`
+	}
+
+	Move struct {
 		From string `json:"from"`
 		To   string `json:"to"`
 	}
@@ -67,10 +74,12 @@ func (action *Action) UnmarshalJSON(source []byte) error {
 	action.Parallel = t.Parallel
 
 	switch t.Type {
-	case "run":
-		action.Data = new(Run)
 	case "copy":
 		action.Data = new(Copy)
+	case "move":
+		action.Data = new(Move)
+	case "run":
+		action.Data = new(Run)
 	default:
 		action.Data = &empty
 
@@ -105,7 +114,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if deploy.Remove {
+	if deploy.Keep == false {
 		defer func() {
 			err := os.RemoveAll(deploy.Folder)
 			if err != nil {
@@ -161,10 +170,12 @@ func (deploy *Deploy) Process(action Action) error {
 	switch data.(type) {
 	case *Copy:
 		return deploy.Copy(data.(*Copy))
+	case *Move:
+		return deploy.Move(data.(*Move))
 	case *Run:
 		return deploy.Run(data.(*Run))
 	default:
-		log.Println("undefiden action:", data)
+		log.Println("undefiden action:", data.String())
 	}
 
 	return nil
@@ -175,6 +186,7 @@ func (deploy *Deploy) Copy(copy *Copy) error {
 	if err != nil {
 		return err
 	}
+	defer source.Close()
 
 	if copy.To == "" {
 		copy.To = filepath.Join(deploy.Folder, source.Name())
@@ -184,9 +196,24 @@ func (deploy *Deploy) Copy(copy *Copy) error {
 	if err != nil {
 		return err
 	}
+	defer target.Close()
 
 	_, err = bufio.NewWriter(target).ReadFrom(source)
 	return err
+}
+
+func (deploy *Deploy) Move(move *Move) error {
+	source, err := os.Open(move.From)
+	if err != nil {
+		return err
+	}
+	defer source.Close()
+
+	if move.To == "" {
+		move.To = filepath.Join(deploy.Folder, source.Name())
+	}
+
+	return os.Rename(move.From, move.To)
 }
 
 func (deploy *Deploy) Run(run *Run) error {
@@ -246,6 +273,22 @@ func (copy *Copy) Check() error {
 	return nil
 }
 
+func (copy *Copy) String() string {
+	return fmt.Sprintf("copy from %s to %s", copy.From, copy.To)
+}
+
+func (move *Move) Check() error {
+	if move.From == "" {
+		return errors.New("'from' can't be empty")
+	}
+
+	return nil
+}
+
+func (move *Move) String() string {
+	return fmt.Sprintf("move from %s to %s", move.From, move.To)
+}
+
 func (run *Run) Check() error {
 	if run.Path == "" {
 		return errors.New("'path' can't be empty")
@@ -254,6 +297,14 @@ func (run *Run) Check() error {
 	return nil
 }
 
+func (run *Run) String() string {
+	return fmt.Sprintf("run %s with timeout %ds, environment %v and query %v", run.Path, run.Timeout, run.Environment, run.Query)
+}
+
 func (empty *Empty) Check() error {
 	return nil
+}
+
+func (empty *Empty) String() string {
+	return string(*empty)
 }
