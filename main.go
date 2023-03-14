@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"log"
 	"os"
 	"os/exec"
@@ -20,8 +21,12 @@ type (
 	}
 
 	Action struct {
-		Data     any
+		Data     Checkable
 		Parallel bool
+	}
+
+	Checkable interface {
+		Check() error
 	}
 
 	Type struct {
@@ -40,6 +45,12 @@ type (
 		Environment  []string `json:"Environment"`
 		ArgumentList []string `json:"ArgumentList"`
 	}
+
+	Empty string
+)
+
+var (
+	empty = Empty("empty")
 )
 
 func (action *Action) UnmarshalJSON(source []byte) error {
@@ -58,7 +69,8 @@ func (action *Action) UnmarshalJSON(source []byte) error {
 	case "copy":
 		action.Data = new(Copy)
 	default:
-		action.Data = "empty"
+		action.Data = &empty
+
 		return nil
 	}
 
@@ -132,15 +144,34 @@ func (deploy *Deploy) Do(action Action) error {
 	data := action.Data
 
 	switch data.(type) {
-	case *Run:
-		return deploy.Run(data.(*Run))
 	case *Copy:
 		return deploy.Copy(data.(*Copy))
+	case *Run:
+		return deploy.Run(data.(*Run))
 	default:
 		log.Println("undefiden action:", data)
 	}
 
 	return nil
+}
+
+func (deploy *Deploy) Copy(copy *Copy) error {
+	source, err := os.Open(copy.From)
+	if err != nil {
+		return err
+	}
+
+	if copy.To == "" {
+		copy.To = filepath.Join(deploy.Folder, source.Name())
+	}
+
+	target, err := os.Create(copy.To)
+	if err != nil {
+		return err
+	}
+
+	_, err = bufio.NewWriter(target).ReadFrom(source)
+	return err
 }
 
 func (deploy *Deploy) Run(run *Run) error {
@@ -179,21 +210,22 @@ func (deploy *Deploy) Run(run *Run) error {
 	return err
 }
 
-func (deploy *Deploy) Copy(copy *Copy) error {
-	source, err := os.Open(copy.From)
-	if err != nil {
-		return err
+func (copy *Copy) Check() error {
+	if copy.From == "" {
+		return errors.New("'from' can't be empty")
 	}
 
-	if copy.To == "" {
-		copy.To = filepath.Join(deploy.Folder, source.Name())
+	return nil
+}
+
+func (run *Run) Check() error {
+	if run.Path == "" {
+		return errors.New("'path' can't be empty")
 	}
 
-	target, err := os.Create(copy.To)
-	if err != nil {
-		return err
-	}
+	return nil
+}
 
-	_, err = bufio.NewWriter(target).ReadFrom(source)
-	return err
+func (empty *Empty) Check() error {
+	return nil
 }
