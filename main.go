@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
 
 	"github.com/goccy/go-json"
 )
@@ -95,16 +96,39 @@ func main() {
 		}
 	}()
 
+	group := new(sync.WaitGroup)
+
 	for i := range deploy.ActionList {
-		err = deploy.Do(i)
-		if err != nil {
-			log.Fatal(err)
+		action := deploy.ActionList[i]
+
+		if action.Parallel == false {
+			group.Wait()
+
+			err = deploy.Do(action)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			continue
 		}
+
+		group.Add(1)
+
+		go func() {
+			err := deploy.Do(action)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			group.Add(-1)
+		}()
 	}
+
+	group.Wait()
 }
 
-func (deploy *Deploy) Do(action int) error {
-	data := deploy.ActionList[action].Data
+func (deploy *Deploy) Do(action Action) error {
+	data := action.Data
 
 	switch data.(type) {
 	case *Run:

@@ -6,9 +6,11 @@ Place ```.deploy``` file to your working folder or pass deploy-file name as argu
 
   "Do": [{
     "type": "copy",
+    "parallel": true,
     "file": "go.mod"
   }, {
     "type": "run",
+    "parallel": true,
     "path": "echo",
     
     "Arguments": [
@@ -16,6 +18,7 @@ Place ```.deploy``` file to your working folder or pass deploy-file name as argu
     ]
   }, {
     "type": "run",
+    "parallel": true,
     "path": "go",
 
     "Environments": [
