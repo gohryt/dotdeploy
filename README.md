@@ -4,12 +4,18 @@ Place ```.deploy``` file to your working folder or pass deploy-file name as argu
 {
   "folder": "update",
 
-  "do": [{
+  "Do": [{
     "type": "copy",
-    "file": ".service"
+    "file": "go.mod"
   }, {
     "type": "run",
-    "command": "CGO_ENABLED=0 go build -o main"
+    "path": "echo",
+    "arguments": ["echo"]
+  }, {
+    "type": "run",
+    "path": "go",
+    "environments": ["CGO_ENABLED=0"],
+    "arguments": ["build", "-o", "update/main"]
   }]
 }
 ```
