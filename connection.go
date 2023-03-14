@@ -66,37 +66,35 @@ func (connection *Connection) UnmarshalJSON(source []byte) error {
 		connection.Data = new(Agent)
 	default:
 		return errors.New("unknown connection type")
-
-		return nil
 	}
 
 	return json.Unmarshal(source, connection.Data)
 }
 
 func (key *Key) Check() error {
-	err := error(nil)
+	errList := []error(nil)
 
 	if key.Name == "" {
-		err = errors.Join(err, errors.New("'name' can't be empty"))
+		errList = append(errList, errors.New("'name' can't be empty"))
 	}
 
 	if key.Host == "" {
-		err = errors.Join(err, errors.New("'host' can't be empty"))
+		errList = append(errList, errors.New("'host' can't be empty"))
 	}
 
 	if key.File == "" {
-		err = errors.Join(err, errors.New("'file' can't be empty"))
+		errList = append(errList, errors.New("'file' can't be empty"))
 	}
 
 	if key.Username == "" {
-		err = errors.Join(err, errors.New("'username' can't be empty"))
+		errList = append(errList, errors.New("'username' can't be empty"))
 	}
 
 	if key.Password == "" {
-		err = errors.Join(err, errors.New("'password' can't be empty"))
+		errList = append(errList, errors.New("'password' can't be empty"))
 	}
 
-	return err
+	return errors.Join(errList...)
 }
 
 func (key *Key) String() string {
@@ -104,25 +102,25 @@ func (key *Key) String() string {
 }
 
 func (password *Password) Check() error {
-	err := error(nil)
+	errList := []error(nil)
 
 	if password.Name == "" {
-		err = errors.Join(err, errors.New("'name' can't be empty"))
+		errList = append(errList, errors.New("'name' can't be empty"))
 	}
 
 	if password.Host == "" {
-		err = errors.Join(err, errors.New("'host' can't be empty"))
+		errList = append(errList, errors.New("'host' can't be empty"))
 	}
 
 	if password.Username == "" {
-		err = errors.Join(err, errors.New("'username' can't be empty"))
+		errList = append(errList, errors.New("'username' can't be empty"))
 	}
 
 	if password.Password == "" {
-		err = errors.Join(err, errors.New("'password' can't be empty"))
+		errList = append(errList, errors.New("'password' can't be empty"))
 	}
 
-	return err
+	return errors.Join(errList...)
 }
 
 func (password *Password) String() string {
@@ -130,21 +128,21 @@ func (password *Password) String() string {
 }
 
 func (agent *Agent) Check() error {
-	err := error(nil)
+	errList := []error(nil)
 
 	if agent.Name == "" {
-		err = errors.Join(err, errors.New("'name' can't be empty"))
+		errList = append(errList, errors.New("'name' can't be empty"))
 	}
 
 	if agent.Host == "" {
-		err = errors.Join(err, errors.New("'host' can't be empty"))
+		errList = append(errList, errors.New("'host' can't be empty"))
 	}
 
 	if agent.Username == "" {
-		err = errors.Join(err, errors.New("'username' can't be empty"))
+		errList = append(errList, errors.New("'username' can't be empty"))
 	}
 
-	return err
+	return errors.Join(errList...)
 }
 
 func (agent *Agent) String() string {
@@ -209,5 +207,15 @@ func (deploy *Deploy) Agent(agent *Agent) (client *goph.Client, err error) {
 	}
 
 	client, err = goph.New(agent.Username, agent.Host, authentication)
+	return
+}
+
+func (remote Remote) Find(name string) (connection *Connection, ok bool) {
+	for i, value := range remote {
+		if value.Name == name {
+			return &remote[i], true
+		}
+	}
+
 	return
 }

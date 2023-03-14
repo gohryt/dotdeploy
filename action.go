@@ -28,13 +28,13 @@ type (
 	}
 
 	Copy struct {
-		From Path `json:"From"`
-		To   Path `json:"To"`
+		From string `json:"from"`
+		To   string `json:"to"`
 	}
 
 	Move struct {
-		From Path `json:"From"`
-		To   Path `json:"To"`
+		From string `json:"from"`
+		To   string `json:"to"`
 	}
 
 	Run struct {
@@ -75,7 +75,7 @@ func (action *Action) UnmarshalJSON(source []byte) error {
 }
 
 func (copy *Copy) Check() error {
-	if copy.From.Path == "" {
+	if copy.From == "" {
 		return errors.New("'from' can't be empty")
 	}
 
@@ -87,7 +87,7 @@ func (copy *Copy) String() string {
 }
 
 func (move *Move) Check() error {
-	if move.From.Path == "" {
+	if move.From == "" {
 		return errors.New("'from' can't be empty")
 	}
 
@@ -136,26 +136,26 @@ func (deploy *Deploy) Process(action *Action) error {
 }
 
 func (deploy *Deploy) Copy(copy *Copy) error {
-	source, err := os.Open(copy.From.Path)
+	source, err := os.Open(copy.From)
 	if err != nil {
 		return err
 	}
 	defer source.Close()
 
-	if copy.To.Path == "" {
-		copy.To.Path = filepath.Join(deploy.Folder, source.Name())
+	if copy.To == "" {
+		copy.To = filepath.Join(deploy.Folder, source.Name())
 	}
 
-	folder := strings.LastIndex(copy.To.Path, "/")
+	folder := strings.LastIndex(copy.To, "/")
 
 	if folder > 0 {
-		err = os.MkdirAll(copy.To.Path[:folder], os.ModePerm)
+		err = os.MkdirAll(copy.To[:folder], os.ModePerm)
 		if err != nil {
 			return err
 		}
 	}
 
-	target, err := os.Create(copy.To.Path)
+	target, err := os.Create(copy.To)
 	if err != nil {
 		return err
 	}
@@ -166,26 +166,26 @@ func (deploy *Deploy) Copy(copy *Copy) error {
 }
 
 func (deploy *Deploy) Move(move *Move) error {
-	source, err := os.Open(move.From.Path)
+	source, err := os.Open(move.From)
 	if err != nil {
 		return err
 	}
 	defer source.Close()
 
-	folder := strings.LastIndex(move.To.Path, "/")
+	folder := strings.LastIndex(move.To, "/")
 
 	if folder > 0 {
-		err = os.MkdirAll(move.To.Path[:folder], os.ModePerm)
+		err = os.MkdirAll(move.To[:folder], os.ModePerm)
 		if err != nil {
 			return err
 		}
 	}
 
-	if move.To.Path == "" {
-		move.To.Path = filepath.Join(deploy.Folder, source.Name())
+	if move.To == "" {
+		move.To = filepath.Join(deploy.Folder, source.Name())
 	}
 
-	return os.Rename(move.From.Path, move.To.Path)
+	return os.Rename(move.From, move.To)
 }
 
 func (deploy *Deploy) Run(run *Run) error {

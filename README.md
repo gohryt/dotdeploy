@@ -31,22 +31,14 @@ Place ```.deploy``` file To your working folder or pass deploy-file name as argu
   "Do": [{
     "type": "copy",
 
-    "From": {
-      "path": ".deploy"
-    },
-    "To": {
-      "path": "update/.deploy"
-    }
+    "from": ".deploy",
+    "to": "update/.deploy"
   }, {
     "type": "move",
     "parallel": true,
 
-    "From": {
-      "path": "update/.deploy"
-    },
-    "To": {
-      "path": "update/.deploy.example"
-    }
+    "from": "update/.deploy",
+    "to": "update/.deploy.example"
   }, {
     "type": "run",
     "parallel": true,
@@ -55,7 +47,7 @@ Place ```.deploy``` file To your working folder or pass deploy-file name as argu
     "timeout": 4,
 
     "Environment": ["HELLO='FROM DEPLOY'"],
-    "Query": ["hello", "From", ".deploy"]
+    "Query": ["hello", "from", ".deploy"]
   }]
 }
 ```
@@ -106,29 +98,21 @@ Each element may be ```parallel``` which means that it will be started in gorout
 {
   "type": "copy",
 
-  "From": {
-    "path": ".service"
-  },
-  "To": {
-    "path": "update/.service"
-  }
+  "from": ".service",
+  "to": "update/.service"
 }
 ```
-Copy ```From``` ```To```. ```To``` key may be ignored. In this case programm will copy file to workrirecTory ```folder```.
+Copy ```from``` ```to```. ```to``` key may be ignored. In this case programm will copy file to workrirecTory ```folder```.
 #### Move
 ```
 {
   "type": "move",
 
-  "From": {
-    "path": ".service"
-  },
-  "To": {
-    "path": "update/.service"
-  }
+  "from": ".service",
+  "to": "update/.service"
 }
 ```
-Move ```From``` ```To```. ```To``` key may be ignored. In this case programm will copy file to workrirecTory ```folder```.
+Move ```from``` ```to```. ```to``` key may be ignored. In this case programm will copy file to workrirecTory ```folder```.
 #### Run
 ```
 {

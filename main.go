@@ -13,18 +13,16 @@ type (
 		Folder string `json:"folder"`
 		Keep   bool   `json:"keep"`
 
-		Remote []Connection `json:"Remote"`
-		Do     []Action     `json:"Do"`
+		Remote Remote `json:"Remote"`
+		Do     Do     `json:"Do"`
 	}
+
+	Remote []Connection
+	Do     []Action
 
 	Checkable interface {
 		Check() error
 		String() string
-	}
-
-	Path struct {
-		Connection string `json:"connection"`
-		Path       string `json:"path"`
 	}
 )
 
