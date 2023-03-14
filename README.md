@@ -18,12 +18,8 @@ Place ```.deploy``` file to your working folder or pass deploy-file name as argu
     "path": "echo",
     "timeout": 4,
 
-    "Environment": [
-      "HELLO='FROM DEPLOY'"
-    ],
-    "Query": [
-      "hello", "from", ".deploy"
-    ]
+    "Environment": ["HELLO='FROM DEPLOY'"],
+    "Query": ["hello", "from", ".deploy"]
   }]
 }
 ```
@@ -54,12 +50,8 @@ Copy file with name to working folder. ```to``` key may be ignored. In this case
   "path": "echo",
   "timeout": 4,
   
-  "Environment": [
-    "HELLO='FROM DEPLOY'"
-  ],
-  "Query": [
-    "hello", "$HELLO", ".deploy"
-  ]
+  "Environment": ["HELLO='FROM DEPLOY'"],
+  "Query": ["hello", "$HELLO", ".deploy"]
 }
 ```
 Run some ```path``` with or without timeout. You can also set Environment and Query.
