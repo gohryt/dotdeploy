@@ -188,16 +188,26 @@ func (deploy *Deploy) Connect(connection *Connection) error {
 }
 
 func (deploy *Deploy) Key(key *Key) (client *goph.Client, err error) {
-	fmt.Println(key)
+	authentication, err := goph.Key(key.File, key.Password)
+	if err != nil {
+		return
+	}
+
+	client, err = goph.New(key.Username, key.Host, authentication)
 	return
 }
 
 func (deploy *Deploy) Password(password *Password) (client *goph.Client, err error) {
-	fmt.Println(password)
+	client, err = goph.New(password.Username, password.Host, goph.Password(password.Password))
 	return
 }
 
 func (deploy *Deploy) Agent(agent *Agent) (client *goph.Client, err error) {
-	fmt.Println(agent)
+	authentication, err := goph.UseAgent()
+	if err != nil {
+		return
+	}
+
+	client, err = goph.New(agent.Username, agent.Host, authentication)
 	return
 }

@@ -3,14 +3,42 @@ Place ```.deploy``` file to your working folder or pass deploy-file name as argu
 ```
 {
   "folder": "update",
-  "keep": true,
+  "keep": false,
+
+  "Remote": [{
+    "type": "key",
+    "name": "key",
+
+    "host": "1.1.1.1",
+    "file": "/home/example/.ssh/id_ed25519",
+    "username": "root",
+    "password": "example"
+  }, {
+    "type": "password",
+    "name": "password",
+
+    "host": "1.1.1.1",
+    "username": "root",
+    "password": "example"
+  }, {
+    "type": "agent",
+    "name": "agent",
+
+    "host": "1.1.1.1",
+    "username": "root"
+  }],
 
   "Do": [{
     "type": "copy",
-    "parallel": true,
 
     "from": ".deploy",
     "to": "update/.deploy"
+  }, {
+    "type": "move",
+    "parallel": true,
+
+    "from": "update/.deploy",
+    "to": "update/.deploy.example"
   }, {
     "type": "run",
     "parallel": true,
@@ -24,14 +52,47 @@ Place ```.deploy``` file to your working folder or pass deploy-file name as argu
 }
 ```
 ```folder``` is folder wich will be created on start, it will be deleted at processing end while setting ```keep``` is false.
-## Commands
+## Remote
+Each element should have ```name``` filled because of referencing (as above).
+#### Key
+```
+{
+  "type": "key",
+
+  "host": "1.1.1.1",
+  "file": "/home/example/.ssh/id_ed25519",
+  "password": "example",
+  "username": "root"
+}
+```
+#### Password
+```
+{
+  "type": "password",
+
+  "host": "1.1.1.1",
+  "username": "root",
+  "password": "example"
+}
+```
+#### Agent
+```
+{
+  "type": "agent",
+
+  "host": "1.1.1.1",
+  "username": "root"
+}
+```
+## Do
+Each element should have ```name``` filled because of referencing (as above).
 #### Parallel
 ```
 {
   "parallel": true
 }
 ```
-Each command may be ```parallel``` which means that it will be started in goroutine.
+Each element may be ```parallel``` which means that it will be started in goroutine.
 #### Copy
 ```
 {
