@@ -30,14 +30,15 @@ type (
 	}
 
 	Copy struct {
-		File string `json:"file"`
+		From string `json:"from"`
+		To   string `json:"to"`
 	}
 
 	Run struct {
 		Path string `json:"path"`
 
-		EnvironmentList []string `json:"Environments"`
-		ArgumentList    []string `json:"Arguments"`
+		Environment  []string `json:"Environment"`
+		ArgumentList []string `json:"ArgumentList"`
 	}
 )
 
@@ -157,7 +158,7 @@ func (deploy *Deploy) Run(run *Run) error {
 
 	command := &exec.Cmd{
 		Path: run.Path,
-		Env:  append(os.Environ(), run.EnvironmentList...),
+		Env:  append(os.Environ(), run.Environment...),
 		Args: append([]string{run.Path}, run.ArgumentList...),
 
 		Stdout: stdout,
@@ -179,12 +180,16 @@ func (deploy *Deploy) Run(run *Run) error {
 }
 
 func (deploy *Deploy) Copy(copy *Copy) error {
-	source, err := os.Open(copy.File)
+	source, err := os.Open(copy.From)
 	if err != nil {
 		return err
 	}
 
-	target, err := os.Create(filepath.Join(deploy.Folder, source.Name()))
+	if copy.To == "" {
+		copy.To = filepath.Join(deploy.Folder, source.Name())
+	}
+
+	target, err := os.Create(copy.To)
 	if err != nil {
 		return err
 	}

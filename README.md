@@ -7,13 +7,18 @@ Place ```.deploy``` file to your working folder or pass deploy-file name as argu
   "Do": [{
     "type": "copy",
     "parallel": true,
-    "file": "go.mod"
+    "from": "go.mod",
+    "to": "update/go.mod"
+  }, {
+    "type": "copy",
+    "parallel": true,
+    "from": "go.mod"
   }, {
     "type": "run",
     "parallel": true,
     "path": "echo",
     
-    "Arguments": [
+    "ArgumentList": [
       "echo"
     ]
   }, {
@@ -21,21 +26,29 @@ Place ```.deploy``` file to your working folder or pass deploy-file name as argu
     "parallel": true,
     "path": "go",
 
-    "Environments": [
+    "Environment": [
       "CGO_ENABLED=0"
     ],
-    "Arguments": [
+    "ArgumentList": [
       "build", "-o", "update/main"
     ]
   }]
 }
 ```
 ## Commands
+#### Parallel
+```
+{
+  "parallel": true
+}
+```
+Each command may be ```parallel``` which means that it will be started in goroutine.
 #### Copy
 ```
 {
   "type": "copy",
-  "file": ".service"
+  "from": ".service",
+  "to": "update/.service"
 }
 ```
-Copy file with name to working folder.
+Copy file with name to working folder. ```to``` key may be ignored. In this case programm will copy file to workrirectory ```folder```.
