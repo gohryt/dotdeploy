@@ -51,11 +51,9 @@ Place ```.deploy``` file To your working folder or pass deploy-file name as argu
     "type": "run",
     "parallel": true,
 
+    "path": "echo",
     "timeout": 4,
 
-    "Path": {
-      "path": "echo"
-    },
     "Environment": ["HELLO='FROM DEPLOY'"],
     "Query": ["hello", "From", ".deploy"]
   }]
@@ -136,11 +134,9 @@ Move ```From``` ```To```. ```To``` key may be ignored. In this case programm wil
 {
   "type": "run",
 
+  "path": "echo",
   "timeout": 4,
   
-  "Path": {
-    "path": "echo"
-  },
   "Environment": ["HELLO='FROM DEPLOY'"],
   "Query": ["hello", "from", ".deploy"]
 }

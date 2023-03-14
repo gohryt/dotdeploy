@@ -38,9 +38,9 @@ type (
 	}
 
 	Run struct {
-		Timeout int `json:"timeout"`
+		Path    string `json:"path"`
+		Timeout int    `json:"timeout"`
 
-		Path        Path     `json:"Path"`
 		Environment []string `json:"Environment"`
 		Query       []string `json:"Query"`
 	}
@@ -99,7 +99,7 @@ func (move *Move) String() string {
 }
 
 func (run *Run) Check() error {
-	if run.Path.Path == "" {
+	if run.Path == "" {
 		return errors.New("'path' can't be empty")
 	}
 
@@ -189,20 +189,20 @@ func (deploy *Deploy) Move(move *Move) error {
 }
 
 func (deploy *Deploy) Run(run *Run) error {
-	if filepath.Base(run.Path.Path) == run.Path.Path {
-		path, err := exec.LookPath(run.Path.Path)
+	if filepath.Base(run.Path) == run.Path {
+		path, err := exec.LookPath(run.Path)
 		if err != nil {
 			return err
 		}
 
-		run.Path.Path = path
+		run.Path = path
 	} else {
 		wd, err := os.Getwd()
 		if err != nil {
 			return err
 		}
 
-		run.Path.Path = filepath.Join(wd, run.Path.Path)
+		run.Path = filepath.Join(wd, run.Path)
 	}
 
 	stdout := &bytes.Buffer{}
@@ -214,9 +214,9 @@ func (deploy *Deploy) Run(run *Run) error {
 		ctx, cancel := context.WithTimeout(context.Background(), (time.Duration(run.Timeout) * time.Second))
 		defer cancel()
 
-		command = exec.CommandContext(ctx, run.Path.Path, run.Query...)
+		command = exec.CommandContext(ctx, run.Path, run.Query...)
 	} else {
-		command = exec.Command(run.Path.Path, run.Query...)
+		command = exec.Command(run.Path, run.Query...)
 	}
 
 	command.Env = append(os.Environ(), run.Environment...)
