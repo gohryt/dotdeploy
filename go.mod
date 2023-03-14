@@ -1,4 +1,4 @@
-module github.com/gohryt/deploy
+module github.com/gohryt/.deploy
 
 go 1.20
 
