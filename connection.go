@@ -4,69 +4,43 @@ import (
 	"errors"
 
 	"github.com/melbahja/goph"
-	"gopkg.in/yaml.v3"
 )
 
 type (
 	Connection struct {
 		Name string
-
 		Data any
 
 		Client *goph.Client
 	}
 
 	ConnectionType struct {
-		Type string `yaml:"type"`
-		Name string `yaml:"name"`
+		Type string
+		Name string
 	}
 
 	Key struct {
-		Host     string `yaml:"host" validate:"required"`
-		Username string `yaml:"username" validate:"required"`
-		File     string `yaml:"file" validate:"required"`
-		Password string `yaml:"password" validate:"required"`
+		Host     string `validate:"required"`
+		Username string `validate:"required"`
+		File     string `validate:"required"`
+		Password string `validate:"required"`
 	}
 
 	Password struct {
-		Host     string `yaml:"host" validate:"required"`
-		Username string `yaml:"username" validate:"required"`
-		Password string `yaml:"password" validate:"required"`
+		Host     string `validate:"required"`
+		Username string `validate:"required"`
+		Password string `validate:"required"`
 	}
 
 	Agent struct {
-		Host     string `yaml:"host" validate:"required"`
-		Username string `yaml:"username" validate:"required"`
+		Host     string `validate:"required"`
+		Username string `validate:"required"`
 	}
 )
 
-func (connection *Connection) UnmarshalYAML(value *yaml.Node) error {
-	t := new(ConnectionType)
-
-	err := value.Decode(t)
-	if err != nil {
-		return err
-	}
-
-	if t.Name != "" {
-		connection.Name = t.Name
-	} else {
-		connection.Name = t.Type
-	}
-
-	switch t.Type {
-	case "key":
-		connection.Data = new(Key)
-	case "password":
-		connection.Data = new(Password)
-	case "agent":
-		connection.Data = new(Agent)
-	default:
-		return errors.New("unknown connection type")
-	}
-
-	return value.Decode(connection.Data)
-}
+var (
+	ErrUnknowConnectionType = errors.New("unknown connection type")
+)
 
 func (deploy *Deploy) Connect(connection *Connection) error {
 	switch connection.Data.(type) {
@@ -78,7 +52,7 @@ func (deploy *Deploy) Connect(connection *Connection) error {
 		return connection.Agent()
 	}
 
-	return errors.New("unknown connection type")
+	return ErrUnknowConnectionType
 }
 
 func (connection *Connection) Key() error {

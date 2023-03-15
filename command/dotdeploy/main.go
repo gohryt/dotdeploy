@@ -13,6 +13,16 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type (
+	Deploy struct {
+		Folder string `yaml:"folder"`
+		Keep   bool   `yaml:"keep"`
+
+		Remote []Connection `yaml:"Remote"`
+		Do     []Action     `yaml:"Do"`
+	}
+)
+
 var (
 	flagVersion = flag.Bool("version", false, "print version")
 	flagFile    = flag.String("file", ".deploy", "set .deploy filepath")
@@ -45,7 +55,7 @@ func main() {
 		return
 	}
 
-	deploy := new(dotdeploy.Deploy)
+	deploy := new(Deploy)
 
 	file, err := os.Open(*flagFile)
 	if err != nil {
@@ -58,8 +68,28 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = deploy.Work(shutdown)
+	err = dotdeploy.Work(shutdown, deploy.Deploy())
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func (deploy *Deploy) Deploy() *dotdeploy.Deploy {
+	new := &dotdeploy.Deploy{
+		Folder: deploy.Folder,
+		Keep:   deploy.Keep,
+
+		Remote: make(dotdeploy.Remote, len(deploy.Remote)),
+		Do:     make(dotdeploy.Do, len(deploy.Do)),
+	}
+
+	for i, connection := range deploy.Remote {
+		new.Remote[i] = connection.Connection()
+	}
+
+	for i, action := range deploy.Do {
+		new.Do[i] = action.Action()
+	}
+
+	return new
 }

@@ -10,15 +10,15 @@ import (
 
 type (
 	Deploy struct {
-		Folder string `yaml:"folder" validate:"required"`
-		Keep   bool   `yaml:"keep"`
+		Folder string `validate:"required"`
+		Keep   bool
 
-		Remote Remote `yaml:"Remote"`
-		Do     Do     `yaml:"Do"`
+		Remote Remote
+		Do     Do
 	}
 )
 
-func (deploy *Deploy) Work(shutdown context.Context) error {
+func Work(shutdown context.Context, deploy *Deploy) error {
 	err := validator.New().Struct(deploy)
 	if err != nil {
 		return err

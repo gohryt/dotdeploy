@@ -10,42 +10,34 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
-	"gopkg.in/yaml.v3"
 )
 
 type (
 	Action struct {
-		Name   string
 		Follow string
 
+		Name string
 		Data any
 
 		Next Do
 	}
 
-	ActionType struct {
-		Type   string `yaml:"type"`
-		Name   string `yaml:"name"`
-		Follow string `yaml:"follow"`
-	}
-
 	Copy struct {
-		From string `yaml:"from" validate:"required"`
-		To   string `yaml:"to"`
+		From string `validate:"required"`
+		To   string
 	}
 
 	Move struct {
-		From string `yaml:"from" validate:"required"`
-		To   string `yaml:"to"`
+		From string `validate:"required"`
+		To   string
 	}
 
 	Run struct {
-		Path    string `yaml:"path" validate:"required"`
-		Timeout int    `yaml:"timeout"`
+		Path    string `validate:"required"`
+		Timeout int
 
-		Environment []string `yaml:"Environment"`
-		Query       []string `yaml:"Query"`
+		Environment []string
+		Query       []string
 	}
 
 	Result struct {
@@ -54,35 +46,9 @@ type (
 	}
 )
 
-func (action *Action) UnmarshalYAML(value *yaml.Node) error {
-	t := new(ActionType)
-
-	err := value.Decode(t)
-	if err != nil {
-		return err
-	}
-
-	if t.Name != "" {
-		action.Name = t.Name
-	} else {
-		action.Name = t.Type
-	}
-
-	action.Follow = t.Follow
-
-	switch t.Type {
-	case "copy":
-		action.Data = new(Copy)
-	case "move":
-		action.Data = new(Move)
-	case "run":
-		action.Data = new(Run)
-	default:
-		return errors.New("unknown action type")
-	}
-
-	return value.Decode(action.Data)
-}
+var (
+	ErrUnknowActionType = errors.New("unknown action type")
+)
 
 func (deploy *Deploy) Process(action *Action) Result {
 	result := Result{
@@ -97,7 +63,7 @@ func (deploy *Deploy) Process(action *Action) Result {
 	case *Run:
 		result.Error = action.Run()
 	default:
-		result.Error = errors.New("unknown action type")
+		result.Error = ErrUnknowActionType
 	}
 
 	return result
