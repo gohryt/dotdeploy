@@ -1,9 +1,8 @@
-module github.com/gohryt/.deploy
+module github.com/gohryt/dotdeploy
 
 go 1.20
 
 require (
-	github.com/davecgh/go-spew v1.1.1
 	github.com/go-playground/validator/v10 v10.11.2
 	github.com/melbahja/goph v1.3.1
 	gopkg.in/yaml.v3 v3.0.1

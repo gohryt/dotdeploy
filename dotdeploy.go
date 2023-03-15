@@ -1,15 +1,11 @@
-package main
+package dotdeploy
 
 import (
 	"context"
 	"errors"
-	"log"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/go-playground/validator/v10"
-	"gopkg.in/yaml.v3"
 )
 
 type (
@@ -22,29 +18,8 @@ type (
 	}
 )
 
-func main() {
-	shutdown, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer stop()
-
-	err := new(Deploy).Work(shutdown)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
 func (deploy *Deploy) Work(shutdown context.Context) error {
-	file, err := os.Open(".deploy")
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	err = yaml.NewDecoder(file).Decode(deploy)
-	if err != nil {
-		return err
-	}
-
-	err = validator.New().Struct(deploy)
+	err := validator.New().Struct(deploy)
 	if err != nil {
 		return err
 	}
@@ -71,16 +46,11 @@ func (deploy *Deploy) Work(shutdown context.Context) error {
 
 	err = os.MkdirAll(deploy.Folder, os.ModePerm)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	if deploy.Keep == false {
-		defer func() {
-			err := os.RemoveAll(deploy.Folder)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}()
+		defer os.RemoveAll(deploy.Folder)
 	}
 
 	base := Do(nil)
