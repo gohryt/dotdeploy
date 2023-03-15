@@ -4,6 +4,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/gohryt/dotdeploy"
+	"github.com/gohryt/dotdeploy/unsafe"
 )
 
 type (
@@ -54,24 +55,24 @@ func (action *Action) UnmarshalYAML(value *yaml.Node) error {
 
 	action.Follow = t.Follow
 
-	mask := As[Any](&action.Data)
+	mask := unsafe.As[unsafe.Any](&action.Data)
 
 	switch t.Type {
 	case "copy":
 		action.Data = new(Copy)
 
 		err = value.Decode(action.Data)
-		mask.Type = Type(new(dotdeploy.Copy))
+		mask.Type = unsafe.Type(new(dotdeploy.Copy))
 	case "move":
 		action.Data = new(Move)
 
 		err = value.Decode(action.Data)
-		mask.Type = Type(new(dotdeploy.Move))
+		mask.Type = unsafe.Type(new(dotdeploy.Move))
 	case "run":
 		action.Data = new(Run)
 
 		err = value.Decode(action.Data)
-		mask.Type = Type(new(dotdeploy.Run))
+		mask.Type = unsafe.Type(new(dotdeploy.Run))
 	default:
 		return dotdeploy.ErrUnknowActionType
 	}

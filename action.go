@@ -13,13 +13,17 @@ import (
 )
 
 type (
+	Do []*Action
+
 	Action struct {
 		Follow string
 
 		Name string
 		Data any
 
-		Next Do
+		Next  Do
+		Base  string
+		Error error
 	}
 
 	Copy struct {
@@ -50,26 +54,32 @@ var (
 	ErrUnknowActionType = errors.New("unknown action type")
 )
 
-func (deploy *Deploy) Process(action *Action) Result {
-	result := Result{
-		Next: action.Next,
-	}
-
+func Process(action *Action) *Action {
 	switch action.Data.(type) {
 	case *Copy:
-		result.Error = action.Copy(deploy.Folder)
+		action.Error = action.Copy()
 	case *Move:
-		result.Error = action.Move(deploy.Folder)
+		action.Error = action.Move()
 	case *Run:
-		result.Error = action.Run()
+		action.Error = action.Run()
 	default:
-		result.Error = ErrUnknowActionType
+		action.Error = ErrUnknowActionType
 	}
 
-	return result
+	return action
 }
 
-func (action *Action) Copy(path string) error {
+func (do Do) Find(name string) (action *Action, ok bool) {
+	for i, value := range do {
+		if value.Name == name {
+			return do[i], true
+		}
+	}
+
+	return
+}
+
+func (action *Action) Copy() error {
 	copy := action.Data.(*Copy)
 
 	source, err := os.Open(copy.From)
@@ -79,7 +89,7 @@ func (action *Action) Copy(path string) error {
 	defer source.Close()
 
 	if copy.To == "" {
-		copy.To = filepath.Join(path, source.Name())
+		copy.To = filepath.Join(action.Base, source.Name())
 	}
 
 	folder := strings.LastIndex(copy.To, "/")
@@ -101,7 +111,7 @@ func (action *Action) Copy(path string) error {
 	return err
 }
 
-func (action *Action) Move(path string) error {
+func (action *Action) Move() error {
 	move := action.Data.(*Move)
 
 	source, err := os.Open(move.From)
@@ -120,7 +130,7 @@ func (action *Action) Move(path string) error {
 	}
 
 	if move.To == "" {
-		move.To = filepath.Join(path, source.Name())
+		move.To = filepath.Join(action.Base, source.Name())
 	}
 
 	return os.Rename(move.From, move.To)

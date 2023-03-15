@@ -9,8 +9,9 @@ import (
 	"runtime/debug"
 	"syscall"
 
-	"github.com/gohryt/dotdeploy"
 	"gopkg.in/yaml.v3"
+
+	"github.com/gohryt/dotdeploy"
 )
 
 type (
@@ -68,7 +69,14 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = dotdeploy.Work(shutdown, deploy.Deploy())
+	inner := deploy.Deploy()
+
+	err = inner.Prepare()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = dotdeploy.Work(shutdown, inner)
 	if err != nil {
 		log.Fatal(err)
 	}

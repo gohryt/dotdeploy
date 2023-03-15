@@ -7,11 +7,15 @@ import (
 )
 
 type (
+	Remote []*Connection
+
 	Connection struct {
 		Name string
 		Data any
 
 		Client *goph.Client
+
+		Error error
 	}
 
 	ConnectionType struct {
@@ -42,17 +46,29 @@ var (
 	ErrUnknowConnectionType = errors.New("unknown connection type")
 )
 
-func (deploy *Deploy) Connect(connection *Connection) error {
+func Connect(connection *Connection) *Connection {
 	switch connection.Data.(type) {
 	case *Key:
-		return connection.Key()
+		connection.Error = connection.Key()
 	case *Password:
-		return connection.Password()
+		connection.Error = connection.Password()
 	case *Agent:
-		return connection.Agent()
+		connection.Error = connection.Agent()
+	default:
+		connection.Error = ErrUnknowConnectionType
 	}
 
-	return ErrUnknowConnectionType
+	return connection
+}
+
+func (remote Remote) Find(name string) (connection *Connection, ok bool) {
+	for i, value := range remote {
+		if value.Name == name {
+			return remote[i], true
+		}
+	}
+
+	return
 }
 
 func (connection *Connection) Key() error {

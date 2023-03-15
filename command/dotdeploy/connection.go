@@ -4,6 +4,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/gohryt/dotdeploy"
+	"github.com/gohryt/dotdeploy/unsafe"
 )
 
 type (
@@ -50,24 +51,24 @@ func (connection *Connection) UnmarshalYAML(value *yaml.Node) error {
 		connection.Name = t.Type
 	}
 
-	mask := As[Any](&connection.Data)
+	mask := unsafe.As[unsafe.Any](&connection.Data)
 
 	switch t.Type {
 	case "key":
 		connection.Data = new(Key)
 
 		err = value.Decode(connection.Data)
-		mask.Type = Type(new(dotdeploy.Key))
+		mask.Type = unsafe.Type(new(dotdeploy.Key))
 	case "password":
 		connection.Data = new(Password)
 
 		err = value.Decode(connection.Data)
-		mask.Type = Type(new(dotdeploy.Password))
+		mask.Type = unsafe.Type(new(dotdeploy.Password))
 	case "agent":
 		connection.Data = new(Agent)
 
 		err = value.Decode(connection.Data)
-		mask.Type = Type(new(dotdeploy.Agent))
+		mask.Type = unsafe.Type(new(dotdeploy.Agent))
 	default:
 		return dotdeploy.ErrUnknowConnectionType
 	}
