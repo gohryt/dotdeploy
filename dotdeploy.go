@@ -5,34 +5,34 @@ import (
 	"errors"
 	"os"
 
-	"github.com/go-playground/validator/v10"
-
 	"github.com/gohryt/dotdeploy/multithread"
 )
 
 type (
 	Deploy struct {
-		Folder string `validate:"required"`
+		Folder string
 		Keep   bool
 
 		Remote Remote
 		Do     Do
 	}
+
+	Validable interface {
+		Validate() error
+	}
 )
 
 var (
-	ErrUnknownFollowReference = errors.New("unknown follow reference")
+	ErrUnknownFollowReference     = errors.New("unknown follow reference")
+	ErrUnknownConnectionReference = errors.New("unknown connection reference")
+
+	ErrDeployFolderEmpty = errors.New(`deploy.Folder == ""`)
 )
 
 func Work(shutdown context.Context, deploy *Deploy) error {
-	err := validator.New().Struct(deploy)
-	if err != nil {
-		return err
-	}
-
 	join := []error(nil)
 
-	err = os.MkdirAll(deploy.Folder, os.ModePerm)
+	err := os.MkdirAll(deploy.Folder, os.ModePerm)
 	if err != nil {
 		return err
 	}
@@ -82,6 +82,11 @@ func Work(shutdown context.Context, deploy *Deploy) error {
 }
 
 func (deploy *Deploy) Prepare() error {
+	err := deploy.Validate()
+	if err != nil {
+		return err
+	}
+
 	base := Do(nil)
 
 	for i := range deploy.Do {
@@ -89,9 +94,26 @@ func (deploy *Deploy) Prepare() error {
 
 		action.Base = deploy.Folder
 
-		if action.Follow == "" {
-			base = append(base, action)
-		} else {
+		remote := ""
+
+		switch action.Data.(type) {
+		case *Upload:
+			remote = action.Data.(*Upload).Connection
+		case *Download:
+			remote = action.Data.(*Download).Connection
+		}
+
+		if remote != "" {
+			connection, ok := deploy.Remote.Find(remote)
+
+			if ok == false {
+				return ErrUnknownConnectionReference
+			}
+
+			action.Connection = connection
+		}
+
+		if action.Follow != "" {
 			follow, ok := deploy.Do.Find(action.Follow)
 
 			if ok == false {
@@ -99,9 +121,36 @@ func (deploy *Deploy) Prepare() error {
 			}
 
 			follow.Next = append(follow.Next, action)
+		} else {
+			base = append(base, action)
 		}
 	}
 
 	deploy.Do = base
+
 	return nil
+}
+
+func (deploy *Deploy) Validate() error {
+	join := []error(nil)
+
+	if deploy.Folder == "" {
+		join = append(join, ErrDeployFolderEmpty)
+	}
+
+	for i := range deploy.Remote {
+		err := deploy.Remote[i].Data.(Validable).Validate()
+		if err != nil {
+			join = append(join, err)
+		}
+	}
+
+	for i := range deploy.Do {
+		err := deploy.Do[i].Data.(Validable).Validate()
+		if err != nil {
+			join = append(join, err)
+		}
+	}
+
+	return errors.Join(join...)
 }

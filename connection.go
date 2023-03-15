@@ -44,6 +44,16 @@ type (
 
 var (
 	ErrUnknowConnectionType = errors.New("unknown connection type")
+
+	ErrKeyHostEmpty          = errors.New(`key.Host == ""`)
+	ErrKeyUsernameEmpty      = errors.New(`key.Username == ""`)
+	ErrKeyFileEmpty          = errors.New(`key.File == ""`)
+	ErrKeyPasswordEmpty      = errors.New(`key.Password == ""`)
+	ErrPasswordHostEmpty     = errors.New(`password.Host == ""`)
+	ErrPasswordUsernameEmpty = errors.New(`password.Username == ""`)
+	ErrPasswordPasswordEmpty = errors.New(`password.Password == ""`)
+	ErrAgentHostEmpty        = errors.New(`agent.Host == ""`)
+	ErrAgentUsernameEmpty    = errors.New(`agent.Username == ""`)
 )
 
 func Connect(connection *Connection) *Connection {
@@ -101,4 +111,58 @@ func (connection *Connection) Agent() error {
 
 	connection.Client, err = goph.New(agent.Username, agent.Host, authentication)
 	return err
+}
+
+func (key *Key) Validate() error {
+	join := []error(nil)
+
+	if key.Host == "" {
+		join = append(join, ErrKeyHostEmpty)
+	}
+
+	if key.Username == "" {
+		join = append(join, ErrKeyUsernameEmpty)
+	}
+
+	if key.File == "" {
+		join = append(join, ErrKeyFileEmpty)
+	}
+
+	if key.Password == "" {
+		join = append(join, ErrKeyPasswordEmpty)
+	}
+
+	return errors.Join(join...)
+}
+
+func (password *Password) Validate() error {
+	join := []error(nil)
+
+	if password.Host == "" {
+		join = append(join, ErrPasswordHostEmpty)
+	}
+
+	if password.Username == "" {
+		join = append(join, ErrPasswordUsernameEmpty)
+	}
+
+	if password.Password == "" {
+		join = append(join, ErrPasswordPasswordEmpty)
+	}
+
+	return errors.Join(join...)
+}
+
+func (agent *Agent) Validate() error {
+	join := []error(nil)
+
+	if agent.Host == "" {
+		join = append(join, ErrAgentHostEmpty)
+	}
+
+	if agent.Username == "" {
+		join = append(join, ErrAgentUsernameEmpty)
+	}
+
+	return errors.Join(join...)
 }

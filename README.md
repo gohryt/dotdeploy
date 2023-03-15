@@ -33,6 +33,17 @@ Do:
     
     Query:
       - three
+
+  - type: upload
+    from: example
+    connection: agent
+    to: /home/admin/example
+
+  - follow: upload
+    type: download
+    connection: agent
+    from: /home/admin/example
+    to: example
 ```
 #### Options
 ```folder``` is folder wich will be created on start and deleted on end of processing.  
@@ -63,21 +74,32 @@ Do:
 #### Copy
 ```
   - type: copy
-
     from: main
     to: update/main #optional
 ```
 #### Move
 ```
   - type: move
-
     from: main
     to: update/main #optional
+```
+#### Upload
+```
+  - type: upload
+    from: main
+    connection: agent
+    to: /home/admin/main #optional
+```
+#### Move
+```
+  - type: download
+    connection: agent
+    from: /home/admin/main
+    to: main #optional
 ```
 #### Run
 ```
   - type: run
-
     path: go
     timeout: 8 #optional
     

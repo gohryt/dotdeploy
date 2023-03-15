@@ -22,3 +22,12 @@ func Data(source any) unsafe.Pointer {
 func As[T any, S any](source *S) *T {
 	return (*T)(unsafe.Pointer(source))
 }
+
+func New[T any]() Any {
+	t := new(T)
+
+	return Any{
+		Type: Type(t),
+		Data: unsafe.Pointer(t),
+	}
+}

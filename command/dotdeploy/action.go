@@ -30,6 +30,18 @@ type (
 		To   string `yaml:"to"`
 	}
 
+	Upload struct {
+		From       string `yaml:"from"`
+		Connection string `yaml:"connection"`
+		To         string `yaml:"to"`
+	}
+
+	Download struct {
+		Connection string `yaml:"connection"`
+		From       string `yaml:"from"`
+		To         string `yaml:"to"`
+	}
+
 	Run struct {
 		Path    string `yaml:"path"`
 		Timeout int    `yaml:"timeout"`
@@ -68,6 +80,16 @@ func (action *Action) UnmarshalYAML(value *yaml.Node) error {
 
 		err = value.Decode(action.Data)
 		mask.Type = unsafe.Type(new(dotdeploy.Move))
+	case "upload":
+		action.Data = new(Upload)
+
+		err = value.Decode(action.Data)
+		mask.Type = unsafe.Type(new(dotdeploy.Upload))
+	case "download":
+		action.Data = new(Download)
+
+		err = value.Decode(action.Data)
+		mask.Type = unsafe.Type(new(dotdeploy.Download))
 	case "run":
 		action.Data = new(Run)
 

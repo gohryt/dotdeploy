@@ -21,23 +21,37 @@ type (
 		Name string
 		Data any
 
+		Connection *Connection
+
 		Next  Do
 		Base  string
 		Error error
 	}
 
 	Copy struct {
-		From string `validate:"required"`
+		From string
 		To   string
 	}
 
 	Move struct {
-		From string `validate:"required"`
+		From string
 		To   string
 	}
 
+	Upload struct {
+		From       string
+		Connection string
+		To         string
+	}
+
+	Download struct {
+		Connection string
+		From       string
+		To         string
+	}
+
 	Run struct {
-		Path    string `validate:"required"`
+		Path    string
 		Timeout int
 
 		Environment []string
@@ -52,6 +66,14 @@ type (
 
 var (
 	ErrUnknowActionType = errors.New("unknown action type")
+
+	ErrCopyFromEmpty           = errors.New(`copy.From == ""`)
+	ErrMoveFromEmpty           = errors.New(`move.From == ""`)
+	ErrUploadFromEmpty         = errors.New(`upload.From == ""`)
+	ErrUploadConnectionEmpty   = errors.New(`upload.Connection == ""`)
+	ErrDownloadConnectionEmpty = errors.New(`download.Connection == ""`)
+	ErrDownloadFromEmpty       = errors.New(`download.From == ""`)
+	ErrRunPathEmpty            = errors.New(`run.Path == ""`)
 )
 
 func Process(action *Action) *Action {
@@ -60,6 +82,10 @@ func Process(action *Action) *Action {
 		action.Error = action.Copy()
 	case *Move:
 		action.Error = action.Move()
+	case *Upload:
+		action.Error = action.Upload()
+	case *Download:
+		action.Error = action.Download()
 	case *Run:
 		action.Error = action.Run()
 	default:
@@ -122,7 +148,7 @@ func (action *Action) Move() error {
 
 	folder := strings.LastIndex(move.To, "/")
 
-	if folder > 0 {
+	if folder > -1 {
 		err = os.MkdirAll(move.To[:folder], os.ModePerm)
 		if err != nil {
 			return err
@@ -134,6 +160,36 @@ func (action *Action) Move() error {
 	}
 
 	return os.Rename(move.From, move.To)
+}
+
+func (action *Action) Upload() error {
+	upload := action.Data.(*Upload)
+
+	if upload.To == "" {
+		source, err := os.Open(upload.From)
+		if err != nil {
+			return err
+		}
+
+		upload.To = "/" + source.Name()
+		source.Close()
+	}
+
+	return action.Connection.Client.Upload(upload.From, upload.To)
+}
+
+func (action *Action) Download() error {
+	download := action.Data.(*Download)
+
+	if download.To == "" {
+		folder := strings.LastIndex(download.From, "/") + 1
+
+		if folder > 0 && folder < len(download.From) {
+			download.To = download.From[folder:]
+		}
+	}
+
+	return action.Connection.Client.Download(download.From, download.To)
 }
 
 func (action *Action) Run() error {
@@ -185,4 +241,57 @@ func (action *Action) Run() error {
 	_, two := os.Stderr.ReadFrom(stderr)
 
 	return errors.Join(err, one, two)
+}
+
+func (copy *Copy) Validate() error {
+	if copy.From == "" {
+		return ErrCopyFromEmpty
+	}
+
+	return nil
+}
+
+func (move *Move) Validate() error {
+	if move.From == "" {
+		return ErrMoveFromEmpty
+	}
+
+	return nil
+}
+
+func (upload *Upload) Validate() error {
+	join := []error(nil)
+
+	if upload.From == "" {
+		join = append(join, ErrUploadFromEmpty)
+	}
+
+	if upload.Connection == "" {
+		join = append(join, ErrUploadConnectionEmpty)
+	}
+
+	return errors.Join(join...)
+}
+
+func (download *Download) Validate() error {
+	join := []error(nil)
+
+	if download.Connection == "" {
+		join = append(join, ErrDownloadConnectionEmpty)
+	}
+
+	if download.From == "" {
+		join = append(join, ErrDownloadFromEmpty)
+	}
+
+	return errors.Join(join...)
+}
+
+func (run *Run) Validate() error {
+	if run.Path == "" {
+		return ErrRunPathEmpty
+	}
+
+	return nil
+
 }
