@@ -1,5 +1,5 @@
 ## Basics
-Make ```.deploy``` file in your working folder. Deploy file should looks like below and filled with commands:
+Make ```.deploy``` file in your working folder. Deploy file should looks like below and filled with commands:  
 ```
 folder: "update"
 
@@ -32,8 +32,8 @@ Do:
       - three
 ```
 #### Options
-```folder``` is folder wich will be created on start and deleted on end of processing.
-```keep``` is a flag wich means that programm should't delete ```folder```.
+```folder``` is folder wich will be created on start and deleted on end of processing.  
+```keep``` is a flag which means that programm should't delete ```folder```.  
 ## Remote
 #### Key
 ```
