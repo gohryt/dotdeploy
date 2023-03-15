@@ -33,7 +33,7 @@ Do:
 ```
 #### Options
 ```folder``` is folder wich will be created on start and deleted on end of processing.  
-```keep``` is a flag which means that programm should't delete ```folder```.  
+```keep``` is a flag which means that program should't delete ```folder```.  
 ## Remote
 #### Key
 ```
