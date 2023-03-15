@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/gohryt/dotdeploy/unsafe"
 )
 
 type (
@@ -74,6 +76,14 @@ var (
 	ErrDownloadConnectionEmpty = errors.New(`download.Connection == ""`)
 	ErrDownloadFromEmpty       = errors.New(`download.From == ""`)
 	ErrRunPathEmpty            = errors.New(`run.Path == ""`)
+)
+
+var (
+	ActionTypeCopy     = unsafe.Type(new(Copy))
+	ActionTypeMove     = unsafe.Type(new(Move))
+	ActionTypeUpload   = unsafe.Type(new(Upload))
+	ActionTypeDownload = unsafe.Type(new(Download))
+	ActionTypeRun      = unsafe.Type(new(Run))
 )
 
 func Process(action *Action) *Action {

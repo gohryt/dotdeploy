@@ -74,27 +74,27 @@ func (action *Action) UnmarshalYAML(value *yaml.Node) error {
 		action.Data = new(Copy)
 
 		err = value.Decode(action.Data)
-		mask.Type = unsafe.Type(new(dotdeploy.Copy))
+		mask.Type = dotdeploy.ActionTypeCopy
 	case "move":
 		action.Data = new(Move)
 
 		err = value.Decode(action.Data)
-		mask.Type = unsafe.Type(new(dotdeploy.Move))
+		mask.Type = dotdeploy.ActionTypeMove
 	case "upload":
 		action.Data = new(Upload)
 
 		err = value.Decode(action.Data)
-		mask.Type = unsafe.Type(new(dotdeploy.Upload))
+		mask.Type = dotdeploy.ActionTypeUpload
 	case "download":
 		action.Data = new(Download)
 
 		err = value.Decode(action.Data)
-		mask.Type = unsafe.Type(new(dotdeploy.Download))
+		mask.Type = dotdeploy.ActionTypeDownload
 	case "run":
 		action.Data = new(Run)
 
 		err = value.Decode(action.Data)
-		mask.Type = unsafe.Type(new(dotdeploy.Run))
+		mask.Type = dotdeploy.ActionTypeRun
 	default:
 		return dotdeploy.ErrUnknowActionType
 	}

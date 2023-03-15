@@ -4,6 +4,8 @@ import (
 	"errors"
 
 	"github.com/melbahja/goph"
+
+	"github.com/gohryt/dotdeploy/unsafe"
 )
 
 type (
@@ -54,6 +56,12 @@ var (
 	ErrPasswordPasswordEmpty = errors.New(`password.Password == ""`)
 	ErrAgentHostEmpty        = errors.New(`agent.Host == ""`)
 	ErrAgentUsernameEmpty    = errors.New(`agent.Username == ""`)
+)
+
+var (
+	ConnectionTypeKey      = unsafe.Type(new(Key))
+	ConnectionTypePassword = unsafe.Type(new(Password))
+	ConnectionTypeAgent    = unsafe.Type(new(Agent))
 )
 
 func Connect(connection *Connection) *Connection {

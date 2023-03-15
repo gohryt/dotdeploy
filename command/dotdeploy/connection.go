@@ -58,17 +58,17 @@ func (connection *Connection) UnmarshalYAML(value *yaml.Node) error {
 		connection.Data = new(Key)
 
 		err = value.Decode(connection.Data)
-		mask.Type = unsafe.Type(new(dotdeploy.Key))
+		mask.Type = dotdeploy.ConnectionTypeKey
 	case "password":
 		connection.Data = new(Password)
 
 		err = value.Decode(connection.Data)
-		mask.Type = unsafe.Type(new(dotdeploy.Password))
+		mask.Type = dotdeploy.ConnectionTypePassword
 	case "agent":
 		connection.Data = new(Agent)
 
 		err = value.Decode(connection.Data)
-		mask.Type = unsafe.Type(new(dotdeploy.Agent))
+		mask.Type = dotdeploy.ConnectionTypeAgent
 	default:
 		return dotdeploy.ErrUnknowConnectionType
 	}
