@@ -1,5 +1,6 @@
 ## Installation
-Run ```go install github.com/gohryt/dotdeploy/command/dotdeploy``` on the pc with go installed. Then run ```dotdeploy --help``` to check it was installed correctly.
+Run ```go install github.com/gohryt/dotdeploy/command/dotdeploy``` on the pc with go installed.  
+Then run ```dotdeploy --help``` to check it was installed correctly.  
 ## Basics
 Make ```.deploy``` file in your working folder. Deploy file should looks like below and filled with commands:  
 ```
