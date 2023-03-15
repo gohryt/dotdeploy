@@ -5,58 +5,70 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/goccy/go-json"
+	"gopkg.in/yaml.v3"
 )
 
 type (
 	Action struct {
-		Data     Checkable
-		Parallel bool `json:"parallel"`
+		Name   string
+		Follow string
+
+		Data any
+
+		Next Do
 	}
 
 	ActionType struct {
-		Type     string `json:"type"`
-		Parallel bool   `json:"parallel"`
+		Type   string `yaml:"type"`
+		Name   string `yaml:"name"`
+		Follow string `yaml:"follow"`
 	}
 
 	Copy struct {
-		From string `json:"from"`
-		To   string `json:"to"`
+		From string `yaml:"from" validate:"required"`
+		To   string `yaml:"to"`
 	}
 
 	Move struct {
-		From string `json:"from"`
-		To   string `json:"to"`
+		From string `yaml:"from" validate:"required"`
+		To   string `yaml:"to"`
 	}
 
 	Run struct {
-		Path    string `json:"path"`
-		Timeout int    `json:"timeout"`
+		Path    string `yaml:"path" validate:"required"`
+		Timeout int    `yaml:"timeout"`
 
-		Environment []string `json:"Environment"`
-		Query       []string `json:"Query"`
+		Environment []string `yaml:"Environment"`
+		Query       []string `yaml:"Query"`
 	}
 
-	Empty string
+	Result struct {
+		Next  Do
+		Error error
+	}
 )
 
-func (action *Action) UnmarshalJSON(source []byte) error {
+func (action *Action) UnmarshalYAML(value *yaml.Node) error {
 	t := new(ActionType)
 
-	err := json.Unmarshal(source, t)
+	err := value.Decode(t)
 	if err != nil {
 		return err
 	}
 
-	action.Parallel = t.Parallel
+	if t.Name != "" {
+		action.Name = t.Name
+	} else {
+		action.Name = t.Type
+	}
+
+	action.Follow = t.Follow
 
 	switch t.Type {
 	case "copy":
@@ -66,76 +78,34 @@ func (action *Action) UnmarshalJSON(source []byte) error {
 	case "run":
 		action.Data = new(Run)
 	default:
-		action.Data = &empty
-
-		return nil
+		return errors.New("unknown action type")
 	}
 
-	return json.Unmarshal(source, action.Data)
+	return value.Decode(action.Data)
 }
 
-func (copy *Copy) Check() error {
-	if copy.From == "" {
-		return errors.New("'from' can't be empty")
+func (deploy *Deploy) Process(action *Action) Result {
+	result := Result{
+		Next: action.Next,
 	}
 
-	return nil
-}
-
-func (copy *Copy) String() string {
-	return fmt.Sprintf("copy from %s to %s", copy.From, copy.To)
-}
-
-func (move *Move) Check() error {
-	if move.From == "" {
-		return errors.New("'from' can't be empty")
-	}
-
-	return nil
-}
-
-func (move *Move) String() string {
-	return fmt.Sprintf("move from %s to %s", move.From, move.To)
-}
-
-func (run *Run) Check() error {
-	if run.Path == "" {
-		return errors.New("'path' can't be empty")
-	}
-
-	return nil
-}
-
-func (run *Run) String() string {
-	return fmt.Sprintf("run %s with timeout %ds, environment %v and query %v", run.Path, run.Timeout, run.Environment, run.Query)
-}
-
-func (empty *Empty) Check() error {
-	return nil
-}
-
-func (empty *Empty) String() string {
-	return string(*empty)
-}
-
-func (deploy *Deploy) Process(action *Action) error {
-	data := action.Data
-
-	switch data.(type) {
+	switch action.Data.(type) {
 	case *Copy:
-		return deploy.Copy(data.(*Copy))
+		result.Error = action.Copy(deploy.Folder)
 	case *Move:
-		return deploy.Move(data.(*Move))
+		result.Error = action.Move(deploy.Folder)
 	case *Run:
-		return deploy.Run(data.(*Run))
+		result.Error = action.Run()
 	default:
-		log.Println("undefiden action:", data.String())
+		result.Error = errors.New("unknown action type")
 	}
 
-	return nil
+	return result
 }
 
-func (deploy *Deploy) Copy(copy *Copy) error {
+func (action *Action) Copy(path string) error {
+	copy := action.Data.(*Copy)
+
 	source, err := os.Open(copy.From)
 	if err != nil {
 		return err
@@ -143,7 +113,7 @@ func (deploy *Deploy) Copy(copy *Copy) error {
 	defer source.Close()
 
 	if copy.To == "" {
-		copy.To = filepath.Join(deploy.Folder, source.Name())
+		copy.To = filepath.Join(path, source.Name())
 	}
 
 	folder := strings.LastIndex(copy.To, "/")
@@ -165,7 +135,9 @@ func (deploy *Deploy) Copy(copy *Copy) error {
 	return err
 }
 
-func (deploy *Deploy) Move(move *Move) error {
+func (action *Action) Move(path string) error {
+	move := action.Data.(*Move)
+
 	source, err := os.Open(move.From)
 	if err != nil {
 		return err
@@ -182,13 +154,15 @@ func (deploy *Deploy) Move(move *Move) error {
 	}
 
 	if move.To == "" {
-		move.To = filepath.Join(deploy.Folder, source.Name())
+		move.To = filepath.Join(path, source.Name())
 	}
 
 	return os.Rename(move.From, move.To)
 }
 
-func (deploy *Deploy) Run(run *Run) error {
+func (action *Action) Run() error {
+	run := action.Data.(*Run)
+
 	if filepath.Base(run.Path) == run.Path {
 		path, err := exec.LookPath(run.Path)
 		if err != nil {

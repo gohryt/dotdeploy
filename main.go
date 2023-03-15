@@ -1,56 +1,72 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/goccy/go-json"
+	"github.com/go-playground/validator/v10"
+	"gopkg.in/yaml.v3"
 )
 
 type (
 	Deploy struct {
-		Folder string `json:"folder"`
-		Keep   bool   `json:"keep"`
+		Folder string `yaml:"folder" validate:"required"`
+		Keep   bool   `yaml:"keep"`
 
-		Remote Remote `json:"Remote"`
-		Do     Do     `json:"Do"`
-	}
-
-	Remote []Connection
-	Do     []Action
-
-	Checkable interface {
-		Check() error
-		String() string
+		Remote Remote `yaml:"Remote"`
+		Do     Do     `yaml:"Do"`
 	}
 )
 
 func main() {
-	name := ".deploy"
+	shutdown, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
-	if len(os.Args) == 2 {
-		name = os.Args[1]
-	}
-
-	file, err := os.Open(name)
+	err := new(Deploy).Work(shutdown)
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+func (deploy *Deploy) Work(shutdown context.Context) error {
+	file, err := os.Open(".deploy")
+	if err != nil {
+		return err
 	}
 	defer file.Close()
 
-	deploy := new(Deploy)
-
-	err = json.NewDecoder(file).Decode(deploy)
+	err = yaml.NewDecoder(file).Decode(deploy)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
+	err = validator.New().Struct(deploy)
+	if err != nil {
+		return err
+	}
+
+	errorReceiver := make(chan error)
+	errorSlice := []error(nil)
+
+	remote := len(deploy.Remote)
+
 	for i := range deploy.Remote {
-		err = deploy.Connect(&deploy.Remote[i])
-		if err != nil {
-			log.Fatal(err)
-		}
+		go func(connection *Connection) {
+			errorReceiver <- deploy.Connect(connection)
+		}(deploy.Remote[i])
+	}
+
+	for i := 0; i < remote; i += 1 {
+		errorSlice = append(errorSlice, <-errorReceiver)
+	}
+
+	err = errors.Join(errorSlice...)
+	if err != nil {
+		return err
 	}
 
 	err = os.MkdirAll(deploy.Folder, os.ModePerm)
@@ -67,41 +83,60 @@ func main() {
 		}()
 	}
 
-	receiver := make(chan error)
+	base := Do(nil)
 
-	in := int64(0)
-	done := int64(0)
+	for i := range deploy.Do {
+		action := deploy.Do[i]
 
-	for i, action := range deploy.Do {
-		if action.Parallel == false {
-			for ; done < in; done += 1 {
-				err = errors.Join(err, <-receiver)
+		if action.Follow == "" {
+			base = append(base, action)
+		} else {
+			follow, ok := deploy.Do.Find(action.Follow)
+
+			if ok == false {
+				return errors.New("action has unknown follow key")
 			}
 
-			if err != nil {
-				log.Fatal(err)
-			}
+			follow.Next = append(follow.Next, action)
+		}
+	}
 
-			err = deploy.Process(&deploy.Do[i])
-			if err != nil {
-				log.Fatal(err)
-			}
+	resultReceiver := make(chan Result)
 
-			continue
+	deploy.Cycle(resultReceiver, base)
+
+	do := len(deploy.Do)
+
+	for i := 0; i < do; i += 1 {
+		result := <-resultReceiver
+
+		if result.Error != nil {
+			do -= Count(result.Next)
+
+			errorSlice = append(errorSlice, result.Error)
+		} else {
+			deploy.Cycle(resultReceiver, result.Next)
 		}
 
-		in += 1
+	}
 
+	return errors.Join(errorSlice...)
+}
+
+func Count(do Do) int {
+	c := len(do)
+
+	for i := range do {
+		c += Count(do[i].Next)
+	}
+
+	return c
+}
+
+func (deploy *Deploy) Cycle(resultReceiver chan Result, do Do) {
+	for i := range do {
 		go func(action *Action) {
-			receiver <- deploy.Process(action)
-		}(&deploy.Do[i])
-	}
-
-	for ; done < in; done += 1 {
-		err = errors.Join(err, <-receiver)
-	}
-
-	if err != nil {
-		log.Fatal(err)
+			resultReceiver <- deploy.Process(action)
+		}(do[i])
 	}
 }

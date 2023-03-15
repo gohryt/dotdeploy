@@ -1,128 +1,85 @@
-## To run
-Place ```.deploy``` file To your working folder or pass deploy-file name as argument. Deploy file should looks like below and filled with commands from Commands section:
+## Basics
+Make ```.deploy``` file in your working folder. Deploy file should looks like below and filled with commands:
 ```
-{
-  "folder": "update",
-  "keep": false,
+folder: "update"
 
-  "Remote": [{
-    "type": "key",
-    "name": "key",
+Remote:
+  - type: agent
+    host: 70.34.202.107
+    username: root
 
-    "host": "1.1.1.1",
-    "file": "/home/example/.ssh/id_ed25519",
-    "username": "root",
-    "password": "example"
-  }, {
-    "type": "password",
-    "name": "password",
+Do:
+  - type: run
+    name: one
+    path: echo
+    
+    Query:
+      - one
 
-    "host": "1.1.1.1",
-    "username": "root",
-    "password": "example"
-  }, {
-    "type": "agent",
-    "name": "agent",
+  - follow: one
+    type: run
+    name: two
+    path: echo
+    
+    Query:
+      - two
 
-    "host": "1.1.1.1",
-    "username": "root"
-  }],
-
-  "Do": [{
-    "type": "copy",
-
-    "from": ".deploy",
-    "to": "update/.deploy"
-  }, {
-    "type": "move",
-    "parallel": true,
-
-    "from": "update/.deploy",
-    "to": "update/.deploy.example"
-  }, {
-    "type": "run",
-    "parallel": true,
-
-    "path": "echo",
-    "timeout": 4,
-
-    "Environment": ["HELLO='FROM DEPLOY'"],
-    "Query": ["hello", "from", ".deploy"]
-  }]
-}
+  - follow: two
+    type: run
+    path: echo
+    
+    Query:
+      - three
 ```
-```folder``` is folder wich will be created on start, it will be deleted at processing end while setting ```keep``` is false.
+#### Options
+```folder``` is folder wich will be created on start and deleted on end of processing.
+```keep``` is a flag wich means that programm should't delete ```folder```.
 ## Remote
-Each element should have ```name``` filled because of referencing (as above).
 #### Key
 ```
-{
-  "type": "key",
-
-  "host": "1.1.1.1",
-  "file": "/home/example/.ssh/id_ed25519",
-  "password": "example",
-  "username": "root"
-}
+  - type: password
+    host: 1.1.1.1
+    file: /home/example/.ssh/id_ed25519
+    username: root
+    password: example
 ```
 #### Password
 ```
-{
-  "type": "password",
-
-  "host": "1.1.1.1",
-  "username": "root",
-  "password": "example"
-}
+  - type: password
+    host: 1.1.1.1
+    username: root
+    password: example
 ```
 #### Agent
 ```
-{
-  "type": "agent",
-
-  "host": "1.1.1.1",
-  "username": "root"
-}
+  - type: agent
+    host: 1.1.1.1
+    username: root
 ```
 ## Do
-Each element should have ```name``` filled because of referencing (as above).
-#### Parallel
-```
-{
-  "parallel": true
-}
-```
-Each element may be ```parallel``` which means that it will be started in goroutine.
 #### Copy
 ```
-{
-  "type": "copy",
+  - type: copy
 
-  "from": ".service",
-  "to": "update/.service"
-}
+    from: main
+    to: update/main
 ```
-Copy ```from``` ```to```. ```to``` key may be ignored. In this case programm will copy file to workrirecTory ```folder```.
 #### Move
 ```
-{
-  "type": "move",
+  - type: move
 
-  "from": ".service",
-  "to": "update/.service"
-}
+    from: main
+    to: update/main
 ```
-Move ```from``` ```to```. ```to``` key may be ignored. In this case programm will copy file to workrirecTory ```folder```.
 #### Run
 ```
-{
-  "type": "run",
+  - type: run
 
-  "path": "echo",
-  "timeout": 4,
-  
-  "Environment": ["HELLO='FROM DEPLOY'"],
-  "Query": ["hello", "from", ".deploy"]
-}
+    path: go
+    timeout: 8
+    
+    Environment:
+      - CGO_ENABLED=0
+    Query:
+      - build
 ```
-Run some ```Path``` with or without timeout. You can also set Environment and Query.
