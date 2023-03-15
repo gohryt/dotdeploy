@@ -62,21 +62,21 @@ Do:
   - type: copy
 
     from: main
-    to: update/main
+    to: update/main #optional
 ```
 #### Move
 ```
   - type: move
 
     from: main
-    to: update/main
+    to: update/main #optional
 ```
 #### Run
 ```
   - type: run
 
     path: go
-    timeout: 8
+    timeout: 8 #optional
     
     Environment:
       - CGO_ENABLED=0
