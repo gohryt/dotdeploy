@@ -12,7 +12,7 @@ Remote:
     username: root
 
 Do:
-  - type: run
+  - type: execute
     name: one
     path: echo
     
@@ -20,7 +20,7 @@ Do:
       - one
 
   - follow: one
-    type: run
+    type: execute
     name: two
     path: echo
     
@@ -28,11 +28,19 @@ Do:
       - two
 
   - follow: two
-    type: run
+    type: execute
     path: echo
     
     Query:
       - three
+
+  - follow: two   
+    type: execute
+    connection: agent
+    path: bash
+
+    Query:
+      - -c 'echo $PATH'
 
   - type: upload
     from: example
@@ -97,9 +105,10 @@ Do:
     from: /home/admin/main
     to: main #optional
 ```
-#### Run
+#### Execute
 ```
-  - type: run
+  - type: execute
+    connection: optional
     path: go
     timeout: 8 #optional
     

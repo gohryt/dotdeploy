@@ -101,6 +101,8 @@ func (deploy *Deploy) Prepare() error {
 			remote = action.Data.(*Upload).Connection
 		case *Download:
 			remote = action.Data.(*Download).Connection
+		case *Execute:
+			remote = action.Data.(*Execute).Connection
 		}
 
 		if remote != "" {

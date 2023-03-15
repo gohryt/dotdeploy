@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/gohryt/dotdeploy/unsafe"
+	"github.com/melbahja/goph"
 )
 
 type (
@@ -52,9 +53,10 @@ type (
 		To         string
 	}
 
-	Run struct {
-		Path    string
-		Timeout int
+	Execute struct {
+		Connection string
+		Path       string
+		Timeout    int
 
 		Environment []string
 		Query       []string
@@ -75,7 +77,7 @@ var (
 	ErrUploadConnectionEmpty   = errors.New(`upload.Connection == ""`)
 	ErrDownloadConnectionEmpty = errors.New(`download.Connection == ""`)
 	ErrDownloadFromEmpty       = errors.New(`download.From == ""`)
-	ErrRunPathEmpty            = errors.New(`run.Path == ""`)
+	ErrExecutePathEmpty        = errors.New(`execute.Path == ""`)
 )
 
 var (
@@ -83,7 +85,7 @@ var (
 	ActionTypeMove     = unsafe.Type(new(Move))
 	ActionTypeUpload   = unsafe.Type(new(Upload))
 	ActionTypeDownload = unsafe.Type(new(Download))
-	ActionTypeRun      = unsafe.Type(new(Run))
+	ActionTypeExecute  = unsafe.Type(new(Execute))
 )
 
 func Process(action *Action) *Action {
@@ -96,8 +98,8 @@ func Process(action *Action) *Action {
 		action.Error = action.Upload()
 	case *Download:
 		action.Error = action.Download()
-	case *Run:
-		action.Error = action.Run()
+	case *Execute:
+		action.Error = action.Execute()
 	default:
 		action.Error = ErrUnknowActionType
 	}
@@ -202,40 +204,83 @@ func (action *Action) Download() error {
 	return action.Connection.Client.Download(download.From, download.To)
 }
 
-func (action *Action) Run() error {
-	run := action.Data.(*Run)
+func (action *Action) Execute() error {
+	execute := action.Data.(*Execute)
 
-	if filepath.Base(run.Path) == run.Path {
-		path, err := exec.LookPath(run.Path)
+	if action.Connection == nil {
+		return Local(execute)
+	}
+
+	client := action.Connection.Client
+
+	command := (*goph.Cmd)(nil)
+	err := error(nil)
+
+	if execute.Timeout > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), (time.Duration(execute.Timeout) * time.Second))
+		defer cancel()
+
+		command, err = client.CommandContext(ctx, execute.Path, execute.Query...)
+	} else {
+		command, err = client.Command(execute.Path, execute.Query...)
+	}
+	if err != nil {
+		return err
+	}
+
+	stdout := &bytes.Buffer{}
+	stderr := &bytes.Buffer{}
+
+	command.Env = execute.Environment
+
+	command.Stdout = stdout
+	command.Stderr = stderr
+
+	err = command.Start()
+	if err != nil {
+		return err
+	}
+
+	err = command.Wait()
+
+	_, one := os.Stdout.ReadFrom(stdout)
+	_, two := os.Stderr.ReadFrom(stderr)
+
+	return errors.Join(err, one, two)
+}
+
+func Local(execute *Execute) error {
+	if filepath.Base(execute.Path) == execute.Path {
+		path, err := exec.LookPath(execute.Path)
 		if err != nil {
 			return err
 		}
 
-		run.Path = path
+		execute.Path = path
 	} else {
 		wd, err := os.Getwd()
 		if err != nil {
 			return err
 		}
 
-		run.Path = filepath.Join(wd, run.Path)
+		execute.Path = filepath.Join(wd, execute.Path)
+	}
+
+	command := (*exec.Cmd)(nil)
+
+	if execute.Timeout > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), (time.Duration(execute.Timeout) * time.Second))
+		defer cancel()
+
+		command = exec.CommandContext(ctx, execute.Path, execute.Query...)
+	} else {
+		command = exec.Command(execute.Path, execute.Query...)
 	}
 
 	stdout := &bytes.Buffer{}
 	stderr := &bytes.Buffer{}
 
-	command := (*exec.Cmd)(nil)
-
-	if run.Timeout > 0 {
-		ctx, cancel := context.WithTimeout(context.Background(), (time.Duration(run.Timeout) * time.Second))
-		defer cancel()
-
-		command = exec.CommandContext(ctx, run.Path, run.Query...)
-	} else {
-		command = exec.Command(run.Path, run.Query...)
-	}
-
-	command.Env = append(os.Environ(), run.Environment...)
+	command.Env = append(os.Environ(), execute.Environment...)
 
 	command.Stdout = stdout
 	command.Stderr = stderr
@@ -297,9 +342,9 @@ func (download *Download) Validate() error {
 	return errors.Join(join...)
 }
 
-func (run *Run) Validate() error {
-	if run.Path == "" {
-		return ErrRunPathEmpty
+func (execute *Execute) Validate() error {
+	if execute.Path == "" {
+		return ErrExecutePathEmpty
 	}
 
 	return nil

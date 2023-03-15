@@ -42,9 +42,10 @@ type (
 		To         string `yaml:"to"`
 	}
 
-	Run struct {
-		Path    string `yaml:"path"`
-		Timeout int    `yaml:"timeout"`
+	Execute struct {
+		Connection string `yaml:"connection"`
+		Path       string `yaml:"path"`
+		Timeout    int    `yaml:"timeout"`
 
 		Environment []string `yaml:"Environment"`
 		Query       []string `yaml:"Query"`
@@ -90,11 +91,11 @@ func (action *Action) UnmarshalYAML(value *yaml.Node) error {
 
 		err = value.Decode(action.Data)
 		mask.Type = dotdeploy.ActionTypeDownload
-	case "run":
-		action.Data = new(Run)
+	case "execute":
+		action.Data = new(Execute)
 
 		err = value.Decode(action.Data)
-		mask.Type = dotdeploy.ActionTypeRun
+		mask.Type = dotdeploy.ActionTypeExecute
 	default:
 		return dotdeploy.ErrUnknowActionType
 	}
