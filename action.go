@@ -133,7 +133,14 @@ func copyConnectionToConnection(copy *Copy, copyMeta *CopyMeta) error {
 	}
 	defer to.Close()
 
-	err = to.MkdirAll(filepath.Dir(copy.To.Path))
+	path := filepath.Dir(copy.To.Path)
+
+	err = to.Remove(path)
+	if err != nil {
+		return err
+	}
+
+	err = to.MkdirAll(path)
 	if err != nil {
 		return err
 	}
@@ -207,7 +214,14 @@ func copyLocalToConnection(copy *Copy, copyMeta *CopyMeta) error {
 	}
 	defer to.Close()
 
-	err = to.MkdirAll(filepath.Dir(copy.To.Path))
+	path := filepath.Dir(copy.To.Path)
+
+	err = to.Remove(path)
+	if err != nil {
+		return err
+	}
+
+	err = to.MkdirAll(path)
 	if err != nil {
 		return err
 	}
@@ -281,7 +295,14 @@ func copyConnectionToLocal(copy *Copy, copyMeta *CopyMeta) error {
 	}
 	defer from.Close()
 
-	err = os.MkdirAll(filepath.Dir(copy.To.Path), os.ModePerm)
+	path := filepath.Dir(copy.To.Path)
+
+	err = os.RemoveAll(path)
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(path, os.ModePerm)
 	if err != nil {
 		return err
 	}
@@ -349,7 +370,14 @@ func copyFileConnectionToLocal(client *sftp.Client, from, to string) error {
 }
 
 func copyLocalToLocal(copy *Copy, copyMeta *CopyMeta) error {
-	err := os.MkdirAll(filepath.Dir(copy.To.Path), os.ModePerm)
+	path := filepath.Dir(copy.To.Path)
+
+	err := os.RemoveAll(path)
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(path, os.ModePerm)
 	if err != nil {
 		return err
 	}
