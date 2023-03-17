@@ -27,7 +27,8 @@ Do:
     Path: 
       path: bash
     Query:
-      - -c 'echo $PATH'
+      - -c
+      - 'echo $PATH'
 ```
 #### Options
 ```folder``` is folder wich will be created on start and deleted on end of processing.  

@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"gopkg.in/yaml.v3"
 
 	"github.com/gohryt/dotdeploy"
@@ -34,6 +36,10 @@ type (
 	Agent struct {
 		Host     string `yaml:"host"`
 		Username string `yaml:"username"`
+	}
+
+	File struct {
+		Path string `yaml:"path"`
 	}
 )
 
@@ -69,6 +75,20 @@ func (connection *Connection) UnmarshalYAML(value *yaml.Node) error {
 
 		err = value.Decode(connection.Data)
 		mask.Type = dotdeploy.ConnectionTypeAgent
+	case "file":
+		file := new(File)
+
+		err = value.Decode(file)
+		if err != nil {
+			return err
+		}
+
+		f, err := os.Open(file.Path)
+		if err != nil {
+			return err
+		}
+
+		return yaml.NewDecoder(f).Decode(connection)
 	default:
 		return dotdeploy.ErrUnknowConnectionType
 	}
