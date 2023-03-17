@@ -86,3 +86,20 @@ Do:
     Query:
       - build
 ```
+## Specials
+#### Loading from file
+```
+  - type: file
+    path: .ssh
+```
+This special type works both in ```Remote``` and ```Do``` section and allows you to load connection or command from file, but only one from one file.
+#### Chaining
+```
+  - name: one
+
+  - follow: one
+    name: two
+
+  - follow: two
+```
+You should keep in mind that all command will be runned parallel and if you need sequential execution of commands you should shain them.
