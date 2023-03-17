@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"gopkg.in/yaml.v3"
 
 	"github.com/gohryt/dotdeploy"
@@ -73,6 +75,20 @@ func (action *Action) UnmarshalYAML(value *yaml.Node) error {
 
 		err = value.Decode(action.Data)
 		mask.Type = dotdeploy.ActionTypeExecute
+	case "file":
+		file := new(File)
+
+		err = value.Decode(file)
+		if err != nil {
+			return err
+		}
+
+		f, err := os.Open(file.Path)
+		if err != nil {
+			return err
+		}
+
+		return yaml.NewDecoder(f).Decode(action)
 	default:
 		return dotdeploy.ErrUnknowActionType
 	}

@@ -13,6 +13,10 @@ type (
 		Do     []Action     `yaml:"Do"`
 	}
 
+	File struct {
+		Path string `yaml:"path"`
+	}
+
 	Path struct {
 		Connection string `yaml:"connection"`
 		Path       string `yaml:"path"`

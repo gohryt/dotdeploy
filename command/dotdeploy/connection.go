@@ -37,10 +37,6 @@ type (
 		Host     string `yaml:"host"`
 		Username string `yaml:"username"`
 	}
-
-	File struct {
-		Path string `yaml:"path"`
-	}
 )
 
 func (connection *Connection) UnmarshalYAML(value *yaml.Node) error {
