@@ -15,45 +15,19 @@ Remote:
 
 Do:
   - type: execute
-    name: one
-    path: echo
-    
-    Query:
-      - one
-
-  - follow: one
-    type: execute
     name: two
-    path: echo
-    
+    Path:
+      connection: agent
+      path: echo
     Query:
       - two
 
-  - follow: two
-    type: execute
-    path: echo
-    
-    Query:
-      - three
-
   - follow: two   
     type: execute
-    connection: agent
-    path: bash
-
+    Path: 
+      path: bash
     Query:
       - -c 'echo $PATH'
-
-  - type: upload
-    from: example
-    connection: agent
-    to: /home/admin/example
-
-  - follow: upload
-    type: download
-    connection: agent
-    from: /home/admin/example
-    to: example
 ```
 #### Options
 ```folder``` is folder wich will be created on start and deleted on end of processing.  
@@ -84,36 +58,28 @@ Do:
 #### Copy
 ```
   - type: copy
-    from: main
-    to: update/main #optional
+    From:
+      connection: agent #optional
+      path: main
+    To:
+      connection: agent #optional
+      path: update/main
 ```
 #### Move
 ```
   - type: move
-    from: main
-    to: update/main #optional
-```
-#### Upload
-```
-  - type: upload
-    from: main
-    connection: agent
-    to: /home/admin/main #optional
-```
-#### Move
-```
-  - type: download
-    connection: agent
-    from: /home/admin/main
-    to: main #optional
+    From:
+      connection: agent #optional
+      path: main
+    to: update/main     #optional
 ```
 #### Execute
 ```
   - type: execute
-    connection: optional
-    path: go
-    timeout: 8 #optional
-    
+    timeout: 8    #optional
+    Path:
+      connection: #optional
+      path: go
     Environment:
       - CGO_ENABLED=0
     Query:
