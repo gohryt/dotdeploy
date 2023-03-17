@@ -538,7 +538,7 @@ func executeLocal(execute *Execute, stdout, stderr io.Writer) Executor {
 		command.Cmd = exec.Command(execute.Path.Path, execute.Query...)
 	}
 
-	command.Env = execute.Environment
+	command.Env = append(os.Environ(), execute.Environment...)
 
 	command.Stdout = stdout
 	command.Stderr = stderr
