@@ -36,7 +36,7 @@ Do:
 ## Remote
 #### Key
 ```
-  - type: password
+  - type: key
     host: 1.1.1.1
     file: /home/example/.ssh/id_ed25519
     username: root
