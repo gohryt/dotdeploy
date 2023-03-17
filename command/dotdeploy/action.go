@@ -21,32 +21,19 @@ type (
 	}
 
 	Copy struct {
-		From string `yaml:"from"`
-		To   string `yaml:"to"`
+		From Path `yaml:"From"`
+		To   Path `yaml:"To"`
 	}
 
 	Move struct {
-		From string `yaml:"from"`
-		To   string `yaml:"to"`
-	}
-
-	Upload struct {
-		From       string `yaml:"from"`
-		Connection string `yaml:"connection"`
-		To         string `yaml:"to"`
-	}
-
-	Download struct {
-		Connection string `yaml:"connection"`
-		From       string `yaml:"from"`
-		To         string `yaml:"to"`
+		From Path   `yaml:"From"`
+		To   string `yaml:"To"`
 	}
 
 	Execute struct {
-		Connection string `yaml:"connection"`
-		Path       string `yaml:"path"`
-		Timeout    int    `yaml:"timeout"`
+		Timeout int `yaml:"timeout"`
 
+		Path        Path     `yaml:"Path"`
 		Environment []string `yaml:"Environment"`
 		Query       []string `yaml:"Query"`
 	}
@@ -81,16 +68,6 @@ func (action *Action) UnmarshalYAML(value *yaml.Node) error {
 
 		err = value.Decode(action.Data)
 		mask.Type = dotdeploy.ActionTypeMove
-	case "upload":
-		action.Data = new(Upload)
-
-		err = value.Decode(action.Data)
-		mask.Type = dotdeploy.ActionTypeUpload
-	case "download":
-		action.Data = new(Download)
-
-		err = value.Decode(action.Data)
-		mask.Type = dotdeploy.ActionTypeDownload
 	case "execute":
 		action.Data = new(Execute)
 

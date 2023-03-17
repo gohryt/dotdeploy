@@ -56,6 +56,8 @@ var (
 	ErrPasswordPasswordEmpty = errors.New(`password.Password == ""`)
 	ErrAgentHostEmpty        = errors.New(`agent.Host == ""`)
 	ErrAgentUsernameEmpty    = errors.New(`agent.Username == ""`)
+
+	ErrConnectionNotFount = errors.New("connection not found")
 )
 
 var (
@@ -79,13 +81,15 @@ func Connect(connection *Connection) *Connection {
 	return connection
 }
 
-func (remote Remote) Find(name string) (connection *Connection, ok bool) {
+func (remote Remote) Find(name string) (connection *Connection, err error) {
 	for i, value := range remote {
 		if value.Name == name {
-			return remote[i], true
+			connection = remote[i]
+			return
 		}
 	}
 
+	err = ErrConnectionNotFount
 	return
 }
 
