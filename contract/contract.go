@@ -11,6 +11,15 @@ type (
 	Copy struct {
 		From, To Path
 	}
+
+	Move struct {
+		From, To Path
+	}
+
+	Execute struct {
+		Path               Path
+		Environment, Query []string
+	}
 )
 
 type (

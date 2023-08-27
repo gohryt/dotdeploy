@@ -1,4 +1,4 @@
-package copy
+package command
 
 import "github.com/gohryt/dotdeploy/contract"
 

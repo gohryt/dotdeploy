@@ -4,7 +4,6 @@ import (
 	"github.com/bytedance/sonic"
 
 	"github.com/gohryt/dotdeploy/contract"
-	"github.com/gohryt/dotdeploy/deployd/command/copy"
 )
 
 type (
@@ -53,7 +52,7 @@ func (command *Command) UnmarshalJSON(buffer []byte) error {
 func (command *Command) Do() (_eturn *contract.Return, err error) {
 	switch typed := command.Data.(type) {
 	case *contract.Copy:
-		return copy.Copy(typed)
+		return Copy(typed)
 	default:
 		return &contract.Return{Type: "unknown"}, nil
 	}
