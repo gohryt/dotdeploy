@@ -1,4 +1,4 @@
-module github.com/gohryt/dotdeploy/dotdeploy
+module github.com/gohryt/dotdeploy/deployctl
 
 go 1.21.0
 
