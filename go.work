@@ -2,4 +2,6 @@ go 1.21.0
 
 use (
 	contract
+	deployd
+	dotdeploy
 )
