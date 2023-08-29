@@ -4,7 +4,7 @@ go 1.21.0
 
 require (
 	github.com/bytedance/sonic v1.10.0
-	github.com/gohryt/dotdeploy/contract v0.0.2
+	github.com/gohryt/dotdeploy/contract v0.0.3
 	gopkg.in/yaml.v3 v3.0.1
 )
 

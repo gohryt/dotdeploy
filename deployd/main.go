@@ -14,33 +14,27 @@ import (
 	"github.com/bytedance/sonic"
 
 	"github.com/gohryt/dotdeploy/contract"
-	"github.com/gohryt/dotdeploy/deployd/command"
+	"github.com/gohryt/dotdeploy/deployd/script"
 )
 
 func serve(group *sync.WaitGroup, descriptor *net.UnixConn) {
-	_eturn, err := (*contract.Return)(nil), error(nil)
+	err := error(nil)
 
 	for {
-		command := new(command.Command)
+		item := new(contract.ItemScript)
 
-		err = sonic.ConfigStd.NewDecoder(descriptor).Decode(command)
+		err = sonic.ConfigStd.NewDecoder(descriptor).Decode(item)
 		if err != nil {
 			if err != io.EOF {
 				log.Println(err)
 			}
-
 			break
 		}
 
-		_eturn, err = command.Do()
+		err = script.Script(item, descriptor)
 		if err != nil {
 			log.Println(err)
 			break
-		}
-
-		err = sonic.ConfigFastest.NewEncoder(descriptor).Encode(_eturn)
-		if err != nil {
-			log.Println(err)
 		}
 	}
 
@@ -82,7 +76,6 @@ func main() {
 			if !errors.Is(err, net.ErrClosed) {
 				log.Println(err)
 			}
-
 			break
 		}
 
