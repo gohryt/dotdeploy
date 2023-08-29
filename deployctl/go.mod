@@ -5,7 +5,10 @@ go 1.21.0
 require (
 	github.com/bytedance/sonic v1.10.0
 	github.com/gohryt/dotdeploy/contract v0.0.2
+	gopkg.in/yaml.v3 v3.0.1
 )
+
+replace github.com/gohryt/dotdeploy/contract => ../contract
 
 require (
 	github.com/chenzhuoyu/base64x v0.0.0-20230717121745-296ad89f973d // indirect
