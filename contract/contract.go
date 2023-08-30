@@ -69,7 +69,7 @@ func (remote ItemRemote) MarshalJSON() (buffer []byte, err error) {
 		follow = append(follow, ast.NewString(value))
 	}
 
-	_, err = node.Set("Follow", ast.NewArray(follow))
+	_, err = node.Set("follow", ast.NewArray(follow))
 	if err != nil {
 		return
 	}
@@ -102,7 +102,7 @@ func (script ItemScript) MarshalJSON() (buffer []byte, err error) {
 		follow = append(follow, ast.NewString(value))
 	}
 
-	_, err = node.Set("Follow", ast.NewArray(follow))
+	_, err = node.Set("follow", ast.NewArray(follow))
 	if err != nil {
 		return
 	}
