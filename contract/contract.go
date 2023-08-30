@@ -26,7 +26,7 @@ type (
 	Item struct {
 		Type   string   `yaml:"type" json:"type"`
 		Name   string   `yaml:"name" json:"name"`
-		Follow []string `yaml:"Follow" json:"Follow"`
+		Follow []string `yaml:"follow" json:"follow"`
 	}
 
 	ItemRemote struct {
@@ -40,8 +40,8 @@ type (
 	}
 
 	Root struct {
-		Remote []ItemRemote `yaml:"Remote" json:"Remote"`
-		Script []ItemScript `yaml:"Script" json:"Script"`
+		Remote []ItemRemote `yaml:"remote" json:"remote"`
+		Script []ItemScript `yaml:"script" json:"script"`
 	}
 )
 
@@ -304,19 +304,19 @@ const (
 
 type (
 	Copy struct {
-		From Path `yaml:"From" json:"From"`
-		To   Path `yaml:"To" json:"To"`
+		From Path `yaml:"from" json:"from"`
+		To   Path `yaml:"to" json:"to"`
 	}
 
 	Move struct {
-		From Path `yaml:"From" json:"From"`
-		To   Path `yaml:"To" json:"To"`
+		From Path `yaml:"from" json:"from"`
+		To   Path `yaml:"to" json:"to"`
 	}
 
 	Execute struct {
-		Path        Path     `yaml:"Path" json:"Path"`
-		Environment []string `yaml:"Environment" json:"Environment"`
-		Query       []string `yaml:"Query" json:"Query"`
+		Path        Path     `yaml:"path" json:"path"`
+		Environment []string `yaml:"environment" json:"environment"`
+		Query       []string `yaml:"query" json:"query"`
 	}
 )
 
