@@ -1,9 +1,9 @@
-module github.com/gohryt/dotdeploy/contract
+module github.com/gohryt/dotdeploy
 
 go 1.21.0
 
 require (
-	github.com/bytedance/sonic v1.10.0
+	github.com/bytedance/sonic v1.10.1
 	gopkg.in/yaml.v3 v3.0.1
 )
 

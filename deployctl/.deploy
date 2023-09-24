@@ -1,0 +1,11 @@
+script:
+  - type: copy
+    name: copy
+    from:
+      path: .deploy
+    to:
+      path: .deploy2
+
+  - type: move
+    name: move
+    follow: [copy]
